@@ -653,6 +653,14 @@ $config = array(
     'zfc_rbac' => array(
         'identity_provider' => 'VuFind\AuthManager',
         'guest_role' => 'guest',
+        'role_provider' => array(
+            'VuFind\Role\DynamicRoleProvider' => array(),
+        ),
+        'role_provider_manager' => array(
+            'factories' => array(
+                'VuFind\Role\DynamicRoleProvider' => 'VuFind\Role\DynamicRoleProviderFactory',
+            ),
+        ),
     ),
 );
 
