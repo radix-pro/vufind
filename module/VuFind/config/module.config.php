@@ -661,6 +661,7 @@ $config = array(
                 'VuFind\Role\DynamicRoleProvider' => 'VuFind\Role\DynamicRoleProviderFactory',
             ),
         ),
+        'vufind_permission_provider_manager' => array(),
     ),
 );
 
