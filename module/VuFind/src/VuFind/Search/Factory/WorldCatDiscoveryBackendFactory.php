@@ -84,7 +84,7 @@ class WorldCatDiscoveryBackendFactory implements FactoryInterface
      *
      * @return Backend
      */
-    protected function createBackend(Connector $connector)
+    protected function createBackend()
     {
         $backend = new Backend($this->createRecordCollectionFactory());
         $backend->setLogger($this->logger);
