@@ -502,6 +502,7 @@ $config = array(
                     'SolrWeb' => 'VuFind\Search\Factory\SolrWebBackendFactory',
                     'Summon' => 'VuFind\Search\Factory\SummonBackendFactory',
                     'WorldCat' => 'VuFind\Search\Factory\WorldCatBackendFactory',
+                    'WorldCatDiscovery' => 'VuFind\Search\Factory\WorldCatDiscoveryBackendFactory',
                 ),
                 'aliases' => array(
                     // Allow Solr core names to be used as aliases for services:
