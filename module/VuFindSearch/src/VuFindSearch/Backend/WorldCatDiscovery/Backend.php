@@ -27,7 +27,7 @@
  * @link     http://vufind.org
  */
 
-namespace VuFindSearch\Backend\WorldCat;
+namespace VuFindSearch\Backend\WorldCatDiscovery;
 
 use VuFindSearch\Query\AbstractQuery;
 
