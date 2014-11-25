@@ -7,3 +7,5 @@ TAGS
 *~
 vendor/.git
 local/*
+/nbproject/private/
+nbproject
