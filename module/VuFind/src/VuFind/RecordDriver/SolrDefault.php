@@ -1838,4 +1838,13 @@ class SolrDefault extends AbstractBase
         return $meta;
     }
 
+    /** Uj **
+     * It is not RUSMARC record, if we came here
+     * So, always return false here
+     */
+    public function is_Rusmarc ()
+    {
+    return false;
+    }
+
 }
