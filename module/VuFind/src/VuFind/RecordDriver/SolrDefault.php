@@ -1845,6 +1845,5 @@ class SolrDefault extends AbstractBase
     public function is_Rusmarc()
     {
         return false;
-        return true;
-    }      
+    }
 }
