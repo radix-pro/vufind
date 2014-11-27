@@ -1317,18 +1317,6 @@ class SolrDefault extends AbstractBase
         return isset($this->fields['hierarchy_top_title'])
             ? $this->fields['hierarchy_top_title'] : array();
     }
-    
-    /**
-     * Get the absolute parent title(s) associated with this item
-     * (empty if none).
-     *
-     * @return array
-     */
-    public function getHierarchyParentTitle()
-    {
-        return isset($this->fields['hierarchy_parent_title'])
-            ? $this->fields['hierarchy_parent_title'] : array();
-    }
 
     /**
      * Get an associative array (id => title) of collections containing this record.
@@ -1757,21 +1745,21 @@ class SolrDefault extends AbstractBase
             ? $this->fields['dedup_data']
             : array();
     }
-    
+
     /**
      * Get Google Scholar Tags
      *
      * @return array
-     */  
+     */
     public function getGoogleScholarTags()
     {
         $meta = array();
-        
+
         $format = $this->getOpenURLFormat();
-        
+
         $topTitles = array();
         $parentTitles = array();
-        switch ($format) 
+        switch ($format)
         {
             case 'Journal':
             case 'Serial':
@@ -1787,8 +1775,8 @@ class SolrDefault extends AbstractBase
                             "content" => $title );
                     }
                 }
-                $parentTitles[] = $this->getHierarchyParentTitle();                
-                if (count($parentTitles) > 0 && !(count($topTitles) == 1 
+                $parentTitles[] = $this->getHierarchyParentTitle();
+                if (count($parentTitles) > 0 && !(count($topTitles) == 1
                         && count($parentTitles) == 1 && $topTitles[0] == $parentTitles[0]))
                 {
                     foreach ($parentTitles as $title)
@@ -1804,9 +1792,9 @@ class SolrDefault extends AbstractBase
                 $meta[] = array(
                     "name" => "citation_issn",
                     "content" => $this->getCleanISSN() );
-            break;            
+            break;
         }
-        
+
         switch ($format)
         {
             case 'Edited book':
@@ -1822,7 +1810,7 @@ class SolrDefault extends AbstractBase
                         "content" => $title );
                     $meta[] = array(
                         "name" => "citation_volume",
-                        "content" => $titleShort );                    
+                        "content" => $titleShort );
                 } else {
                     $meta[] = array(
                         "name" => "citation_title",
@@ -1839,7 +1827,7 @@ class SolrDefault extends AbstractBase
                     "content" => $this->getContainerStartPage() );
                 $meta[] = array(
                     "name" => "citation_lastpage",
-                    "content" => $this->getContainerEndPage() );            
+                    "content" => $this->getContainerEndPage() );
             break;
         }
 
@@ -1850,22 +1838,30 @@ class SolrDefault extends AbstractBase
             "content" => $this->getPrimaryAuthor() );
         foreach ($this->getSecondaryAuthors() as $author) {
                 $meta[] = array(
-                    "name" => "citation_author", 
+                    "name" => "citation_author",
                     "content" => $author);
         }
         $meta[] = array(
             "name" => "citation_publication_date",
             "content" => $pubDate
         );
-        
+
         foreach ($this->getURLs() as $url) {
             if (! empty($url['url']) && preg_match('/\.pdf$/i', $url['url']))
             {
                 $meta[] = array("name" => "citation_pdf_url", "content" => $url['url']);
             }
-        }       
-        
+        }
+
         return $meta;
     }
 
+    /** Uj **
+     * It is not RUSMARC record, if we came here
+     * So, always return false here
+     */
+    public function is_Rusmarc()
+    {
+        return false;
+    }
 }

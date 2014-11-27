@@ -6,9 +6,4 @@ ChangeLog
 TAGS
 *~
 vendor/.git
-<<<<<<< HEAD
-=======
-local/*
-/nbproject/private/
->>>>>>> remotes/uf-vault/master
 nbproject
