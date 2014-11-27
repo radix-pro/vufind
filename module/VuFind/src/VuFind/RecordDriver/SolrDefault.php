@@ -1816,7 +1816,7 @@ class SolrDefault extends AbstractBase
                 if (! empty($cleanISSN) && $cleanISSN > 0)
                 {
                     $meta[] = array(
-                        "name" => "citation_title",
+                        "name" => "citation_issn",
                         "content" => $cleanISSN );                    
                 }
             break;
