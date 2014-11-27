@@ -1317,6 +1317,18 @@ class SolrDefault extends AbstractBase
         return isset($this->fields['hierarchy_top_title'])
             ? $this->fields['hierarchy_top_title'] : array();
     }
+    
+    /**
+     * Get the absolute parent title(s) associated with this item
+     * (empty if none).
+     *
+     * @return array
+     */
+    public function getHierarchyParentTitle()
+    {
+        return isset($this->fields['hierarchy_parent_title'])
+            ? $this->fields['hierarchy_parent_title'] : array();
+    }
 
     /**
      * Get an associative array (id => title) of collections containing this record.
@@ -1754,16 +1766,92 @@ class SolrDefault extends AbstractBase
     public function getGoogleScholarTags()
     {
         $meta = array();
+        
         $format = $this->getOpenURLFormat();
+        
+        $topTitles = array();
+        $parentTitles = array();
+        switch ($format) 
+        {
+            case 'Journal':
+            case 'Serial':
+            case 'Article':
+            case 'Journal article':
+                $topTitles[] = $this->getHierarchyTopTitle();
+                if (!empty($topTitles))
+                {
+                    foreach ($topTitles as $title)
+                    {
+                        $meta[] = array(
+                            "name" => "citation_journal_title",
+                            "content" => $title );
+                    }
+                }
+                $parentTitles[] = $this->getHierarchyParentTitle();                
+                if (count($parentTitles) > 0 && !(count($topTitles) == 1 
+                        && count($parentTitles) == 1 && $topTitles[0] == $parentTitles[0]))
+                {
+                    foreach ($parentTitles as $title)
+                    {
+                        $meta[] = array(
+                            "name" => "citation_issue",
+                            "content" => $title );
+                    }
+                }
+                $meta[] = array(
+                    "name" => "citation_title",
+                    "content" => $this->getShortTitle() );
+                $meta[] = array(
+                    "name" => "citation_issn",
+                    "content" => $this->getCleanISSN() );
+            break;            
+        }
+        
+        switch ($format)
+        {
+            case 'Edited book':
+            case 'Authored book':
+            case 'Book':
+                $titleFull = $this->getTitle();
+                $titleShort = $this->getShortTitle();
+                if (strlen($titleFull) > strlen($titleShort) && strpos($titleFull, $titleShort) == 0 )
+                {
+                    $title = substr($titleFull, strlen($titleShort) + 1);
+                    $meta[] = array(
+                        "name" => "citation_title",
+                        "content" => $title );
+                    $meta[] = array(
+                        "name" => "citation_volume",
+                        "content" => $titleShort );                    
+                } else {
+                    $meta[] = array(
+                        "name" => "citation_title",
+                        "content" => $titleFull );
+                }
+                $meta[] = array(
+                    "name" => "citation_isbn",
+                    "content" => $this->getCleanISBN() );
+                break;
+            case 'Journal article':
+            case 'Article':
+                $meta[] = array(
+                    "name" => "citation_firstpage",
+                    "content" => $this->getContainerStartPage() );
+                $meta[] = array(
+                    "name" => "citation_lastpage",
+                    "content" => $this->getContainerEndPage() );            
+            break;
+        }
+
         $pubDate = $this->getPublicationDates();
         $pubDate = empty($pubDate) ? '' : $pubDate[0];
-        $meta[] = array("name" => "citation_title", "content" => $this->getTitle());
         $meta[] = array(
             "name" => "citation_author",
-            "content" => $this->getPrimaryAuthor()
-        );
+            "content" => $this->getPrimaryAuthor() );
         foreach ($this->getSecondaryAuthors() as $author) {
-                $meta[] = array("name" => "citation_author", "content" => $author);
+                $meta[] = array(
+                    "name" => "citation_author", 
+                    "content" => $author);
         }
         $meta[] = array(
             "name" => "citation_publication_date",
@@ -1771,69 +1859,11 @@ class SolrDefault extends AbstractBase
         );
         
         foreach ($this->getURLs() as $url) {
-            if (preg_match('\.pdf$', $url))
+            if (! empty($url['url']) && preg_match('/\.pdf$/i', $url['url']))
             {
-                $meta[] = array("name" => "citation_pdf_url", "content" => $url);
+                $meta[] = array("name" => "citation_pdf_url", "content" => $url['url']);
             }
-        }
-        
-        switch ($format) {
-        case 'Edited book':
-        case 'Authored book':
-        case 'Book':
-            $meta[] = array(
-                "name" => "citation_isbn",
-                "content" => $this->getCleanISBN()
-            );
-            break;
-        case 'Journal article':
-        case 'Article':
-            $meta[] = array(
-                "name" => "citation_issn",
-                "content" => $this->getCleanISSN()
-            );
-            $meta[] = array(
-                "name" => "citation_volume",
-                "content" => $this->getContainerVolume()
-            );
-            $meta[] = array(
-                "name" => "citation_issue",
-                "content" => $this->getContainerIssue()
-            );
-            $meta[] = array(
-                "name" => "citation_firstpage",
-                "content" => $this->getContainerStartPage()
-            );
-            
-            $topTitle = $this->getHierarchyTopTitle();
-            if (!empty($topTitle))
-            {
-                $meta[] = array(
-                    "name" => "citation_journal_title",
-                    "content" => $topTitle[0]
-                );                
-            }
-            
-            break;
-        case 'Journal':
-        case 'Serial':
-            $meta[] = array(
-                "name" => "citation_issn",
-                "content" => $this->getCleanISSN()
-            );
-
-            $topTitle = $this->getHierarchyTopTitle();
-            if (!empty($topTitle))
-            {
-                $meta[] = array(
-                    "name" => "citation_journal_title",
-                    "content" => $topTitle[0]
-                );                
-            }
-            
-        default:
-            break;
-        }
+        }       
         
         return $meta;
     }
