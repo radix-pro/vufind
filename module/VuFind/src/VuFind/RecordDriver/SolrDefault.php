@@ -1319,6 +1319,29 @@ class SolrDefault extends AbstractBase
     }
 
     /**
+     * Get the hierarchy_top_id(s) associated with this item (empty if none).
+     *
+     * @return array
+     */
+    public function getHierarchyParentID()
+    {
+        return isset($this->fields['hierarchy_parent_id'])
+            ? $this->fields['hierarchy_parent_id'] : array();
+    }
+
+    /**
+     * Get the parent title(s) associated with this item
+     * (empty if none).
+     *
+     * @return array
+     */
+    public function getHierarchyParentTitle()
+    {
+        return isset($this->fields['hierarchy_parent_title'])
+            ? $this->fields['hierarchy_parent_title'] : array();
+    }
+
+    /**
      * Get an associative array (id => title) of collections containing this record.
      *
      * @return array
@@ -1757,25 +1780,21 @@ class SolrDefault extends AbstractBase
 
         $format = $this->getOpenURLFormat();
 
-        $topTitles = array();
-        $parentTitles = array();
         switch ($format)
         {
             case 'Journal':
             case 'Serial':
             case 'Article':
             case 'Journal article':
-                $topTitles[] = $this->getHierarchyTopTitle();
+                $topTitles = $this->getHierarchyTopTitle();
                 if (!empty($topTitles))
                 {
                     foreach ($topTitles as $title)
                     {
-                        $meta[] = array(
-                            "name" => "citation_journal_title",
-                            "content" => $title );
+                        $meta[] = array( "name" => "citation_journal_title", "content" => $title );
                     }
                 }
-                $parentTitles[] = $this->getHierarchyParentTitle();
+                $parentTitles = $this->getHierarchyParentTitle();
                 if (count($parentTitles) > 0 && !(count($topTitles) == 1
                         && count($parentTitles) == 1 && $topTitles[0] == $parentTitles[0]))
                 {
@@ -1786,12 +1805,20 @@ class SolrDefault extends AbstractBase
                             "content" => $title );
                     }
                 }
-                $meta[] = array(
-                    "name" => "citation_title",
-                    "content" => $this->getShortTitle() );
-                $meta[] = array(
-                    "name" => "citation_issn",
-                    "content" => $this->getCleanISSN() );
+                $shortTitle = $this->getShortTitle();
+                if (! empty($shortTitle))
+                {
+                    $meta[] = array(
+                        "name" => "citation_title",
+                        "content" => $shortTitle );                    
+                }
+                $cleanISSN = $this->getCleanISSN();
+                if (! empty($cleanISSN) && $cleanISSN > 0)
+                {
+                    $meta[] = array(
+                        "name" => "citation_title",
+                        "content" => $cleanISSN );                    
+                }
             break;
         }
 
