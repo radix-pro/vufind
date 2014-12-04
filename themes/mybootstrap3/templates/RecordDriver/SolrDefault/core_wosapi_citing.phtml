@@ -1,0 +1,177 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors','Off');
+
+/* ************************************************************************ */
+/* Take number of citing articles from remote WoS server by WoS API         */
+/*                                                                          */
+/* Input:  unique identifiers of current article (WoS UT or DOI),           */
+/*         $show_citing_report                                              */
+/* Return: $wos_citing_title, $wos_citing_counter                           */
+/*                                                                          */
+/* P.S. Work only with WoS XML records                                      */
+/* ************************************************************************ */
+$WOS_API_URL = "https://ws.isiknowledge.com/cps/xrpc";
+$WOS_OpenURL_CITING = "http://ws.isiknowledge.com/cps/openurl/service?url_ver=Z39.88-2004&svc_val_fmt=info:ofi/fmt:kev:mtx:sch_svc&svc.citing=yes";
+            /* P.S. Citing URL may be received from API (citingArticlesURL) */
+
+$recordID = $this->driver->getUniqueID();
+$recordID = strtoupper(trim($recordID));  /* WOS{issn}-year-vol-issue-wosId */
+
+$wos_citing_title   = "";
+$wos_citing_counter = "";
+
+if (substr($recordID, 0, 3) == "WOS"):      /* Perform only WoS XML records */
+                                           /* WoS record type = F(recordId) */
+    if (substr_count($recordID, "-") < 1):
+        $wos_record_type = "Journal";
+    else:                                  /* Define WoS article identifier */
+        $wosIDpos = strrpos($recordID, '-');
+        if ($wosIDpos > 0):
+            $wosID = trim(substr($recordID, $wosIDpos +1));
+            if (strlen($wosID) < 15):
+                $wos_record_type = "Number";
+                $wosID = "";
+            else:
+                $wos_record_type = "Article";
+            endif;
+        endif;
+    endif;
+
+    if ($wos_record_type == "Article"):
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    /* Articles: define citings                                             */
+
+    $WOS_UT = $wosID;
+
+    $XML_DATA = 
+    "<?xml version='1.0' encoding='UTF-8'?>
+     <request xmlns='http://www.isinet.com/xrpc42' src='app.id=VuFind'> 
+
+     <fn name='LinksAMR.retrieve'> 
+     <list> 
+
+        <!-- WHO -->
+        <map> 
+            <!-- Comment, so use auto define IP
+            <val name='username'>username</val> 
+            <val name='password'>test</val> 
+            -->
+        </map> 
+
+        <!-- OUTPUT DATA --> 
+        <map> 
+        <list name='WOS'> 
+           <val>timesCited</val> 
+      <!-- <val>citingArticlesURL</val> -->
+        </list> 
+        </map>
+
+         <!-- ARTICLE ID --> 
+         <map> 
+         <map name='cite_id'> 
+            <val name='ut'>$WOS_UT</val> 
+         </map>
+         </map>
+
+     </list> 
+     </fn> 
+
+    </request>";
+
+    $ch = curl_init($WOS_API_URL);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/xml'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, "$XML_DATA");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $wos_output_xml = curl_exec($ch);
+                                                              /* Xml -> arr */
+    if (!curl_errno($ch)):
+        $wos_output_xml = simplexml_load_string($wos_output_xml);
+        $wos_output_xml = json_encode($wos_output_xml);
+        $wos_output_arr = json_decode($wos_output_xml, TRUE);
+
+        if (isset($wos_output_arr["fn"]["map"]["map"]["map"]["val"])):
+            $wos_citing_counter = $wos_output_arr["fn"]["map"]["map"]["map"]["val"];
+        endif;
+        $wos_citing_counter = intval($wos_citing_counter);
+
+        if ($wos_citing_counter <= 0):
+            $wos_citing_title   = "";
+            $wos_citing_counter = "";
+        else:
+            $wos_citing_title   = "цитирований:";        /* List */
+            if ($show_citing_report == "Y"): /* Show citing list in new win */
+                $wos_citing_title   = "Цитирований:";    /* Page */
+                $wos_citing_open_url = $WOS_OpenURL_CITING . "&" . "rft_id=info:ut/$WOS_UT";
+                $wos_citing_open_txt = "Показать список цитирующих статей во встроенном окне";
+                $wos_citing_counter  = "<a href='$wos_citing_open_url' onClick=\"JS_ShowHideIframe('iframeDivId', 'iframeWinId', '$wos_citing_open_url', '#iframeWosAnchor'); return false;\" target='iframeWos' title='$wos_citing_open_txt'>$wos_citing_counter</a>";
+                /** NewWin **
+                $wos_citing_open_txt = "Показать список цитирующих статей в отдельном окне";
+                $wos_citing_counter  = "<a onClick=\"WosNewWin('$wos_citing_open_url'); return false\" href='$wos_citing_open_url' title='$wos_citing_open_txt'>$wos_citing_counter</a>";
+                **/
+            endif;
+        endif;
+    endif;
+
+    @curl_close($ch);
+
+    /*                                                                      */
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    endif;
+
+                                   /* JS function to open link iside iFrame */
+    if ($show_citing_report == "Y"):
+    if ($wos_citing_counter != ""):
+    if (!isset($GLOBALS["wos_js_showhide_func"]) || $GLOBALS["wos_js_showhide_func"] != "Y"):
+        echo "<script language='JavaScript'><!--
+              function JS_ShowHideIframe(ifrDivId, ifrWinId, ifrDocUrl, ifrAnchor) {
+              var ifrDiv = document.getElementById(ifrDivId);
+              var ifrWin = document.getElementById(ifrWinId).contentWindow;
+              if(ifrDiv.style.display == 'none') 
+                {
+                 ifrDiv.style.display = '';
+                 ifrWin.location.href = ifrDocUrl;
+                 location.href = ifrAnchor;
+                }
+              else
+                { 
+                 /** Used by citing & fulltext **
+                 ifrDiv.style.display = 'none';     
+                 **/
+                 ifrWin.location.href = ifrDocUrl;
+                }
+              return; }
+        //--></script>";
+        $GLOBALS["wos_js_showhide_func"] = "Y";
+    endif;
+    endif;
+    endif;
+
+    /** NewWin **
+    if ($show_citing_report == "Y"):
+    if ($wos_citing_counter != ""):
+    if ($GLOBALS["wos_js_newwin_func"] != "Y"):
+        echo '<script language="JavaScript"><!--
+              function WosNewWin(url) {
+              var w = Math.floor(screen.width  * 0.9);
+              var h = Math.floor(screen.height * 0.8);
+              var options = "width=" + w + ",height=" + h + ",";
+              options += "screenX=10,screenY=10,left=10,top=10,";
+              options += "resizable=no,scrollbars=yes,status=no,";
+              options += "menubar=yes,toolbar=no,location=no,directories=no";
+              var newWin = window.open(url, "newWin", options);
+              newWin.focus();
+             }
+        //--></script>';
+        $GLOBALS["wos_js_newwin_func"] = "Y";
+    endif;
+    endif;
+    endif;
+    **/
+
+endif;
+/* ************************************************************************ */
+?>

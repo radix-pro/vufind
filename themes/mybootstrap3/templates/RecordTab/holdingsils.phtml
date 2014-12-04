@@ -39,8 +39,16 @@
 <? if (!empty($urls) || $openUrl): ?>
   <h3><?=$this->transEsc("Internet")?></h3>
   <? if (!empty($urls)): ?>
-    <? foreach ($urls as $current): ?>
-      <a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>"><?=$this->escapeHtml($current['desc'])?></a><br/>
+    <? foreach ($urls as $current):
+                        /* Uj (use redirect script for fulltext statistics) */
+       $go2url_script = $this->url('home') . "record/go2url";
+       $recordID      = urlencode($this->driver->getUniqueID());
+       $searchEngine  = urlencode($this->searchClassId);    /* Solr, Summon */
+       $fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));
+       $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
+    ?>
+  <!--<a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>"><?=$this->escapeHtml($current['desc'])?></a><br/>-->
+      <a href="<?=$fulltext_url?>"><?=$this->escapeHtml($current['desc'])?></a><br/>
     <? endforeach; ?>
   <? endif; ?>
   <? if ($openUrl): ?><?=$this->openUrl($openUrl);?><? endif; ?>

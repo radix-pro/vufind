@@ -25,3 +25,18 @@
     </ul>
   </div>
 </div>
+
+<? /* Uj: services menu column */
+include ("admin/statistics2/stat2_menu.php");        /* => $li_menu_stat2   */
+include ("search/elib2vf/elib2vf_menu.php");         /* => $li_menu_elib2vf */
+if ($li_menu_stat2 != "" || $li_menu_elib2vf != ""):
+    echo '<div !class="col-sm-4">';
+    echo '<p><strong>Сервисы</strong></p>';
+    echo '<ul>';
+    echo $li_menu_stat2;
+    echo $li_menu_elib2vf;
+    echo '</ul>';
+    echo '</div>';
+endif;
+?>
+

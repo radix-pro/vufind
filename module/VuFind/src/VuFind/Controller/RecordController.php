@@ -464,4 +464,13 @@ class RecordController extends AbstractRecord
         return (isset($config->Record->next_prev_navigation)
             && $config->Record->next_prev_navigation);
     }
+
+    /** Uj **
+     * Only to make enable script go2url.phtml by the next
+     * address: "http://.../vufind/Record/Go2Url"
+     **/
+    public function Go2UrlAction()
+    {
+    }
+
 }

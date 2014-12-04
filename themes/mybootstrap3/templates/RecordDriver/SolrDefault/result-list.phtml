@@ -133,13 +133,36 @@
         <? endif; ?>
         <? if (!is_array($urls)) $urls = array();
           if(!$this->driver->isCollection()):
-            foreach ($urls as $current): ?>
-              <a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>" class="fulltext" target="new"><i class="fa fa-external-link"></i> <?=($current['url'] == $current['desc']) ? $this->transEsc('Get full text') : $this->escapeHtml($current['desc'])?></a><br/>
+            foreach ($urls as $current):
+                        /* Uj (use redirect script for fulltext statistics) */
+            $go2url_script = $this->url('home') . "record/go2url";
+            $recordID      = urlencode($this->driver->getUniqueID());
+            $searchEngine  = urlencode($this->searchClassId);/* Solr,Summon */
+            $fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));
+            $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
+            ?>
+          <!--<a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>" class="fulltext" target="new"><i class="fa fa-external-link"></i> <?=($current['url'] == $current['desc']) ? $this->transEsc('Get full text') : $this->escapeHtml($current['desc'])?></a><br/>-->
+              <a href="<?=$fulltext_url?>" class="fulltext" target="new"><i class="fa fa-external-link"></i> <?=($current['url'] == $current['desc']) ? $this->transEsc('Get full text') : $this->escapeHtml($current['desc'])?></a><br/>
           <? endforeach; ?>
         <? endif; ?>
       <? endif; ?>
 
+      <?                               /* Uj: fulltext URL for WoS articles */
+      $show_fulltext_link = "newwin";        /* {newwin/self}, skip if emp. */
+      include ("core_wosapi_fulltext.phtml");        /* => $wos_fulltex_url */
+      if ($wos_fulltext_url != ""):
+          echo $wos_fulltext_url . "<br>";
+      endif; 
+      ?>
+
       <?=str_replace('class="', 'class="label label-info ', $this->record($this->driver)->getFormatList())?>
+
+      <?   /* Uj: WoS API for citings (articles) & impact factor (journals) */
+      $show_citing_report = "";           /* Show citing report in new win. */
+      include ("core_wosapi_citing.phtml"); /* => $wos_citing_title,counter */
+      if ($wos_citing_counter != ""): ?>
+      &nbsp;(<?echo $wos_citing_title . "&nbsp;" . $wos_citing_counter?>)
+      <? endif; ?>
 
       <? if (!$openUrlActive && empty($urls) && $this->driver->supportsAjaxStatus()): ?>
         <span class="status ajax-availability hidden">
@@ -189,4 +212,6 @@
       <?=$openUrl?'<span class="Z3988" title="'.$this->escapeHtmlAttr($openUrl).'"></span>':''?>
     </div>
   </div>
+
+<br>  <!-- Uj: separator space between list elements -->
 </div>

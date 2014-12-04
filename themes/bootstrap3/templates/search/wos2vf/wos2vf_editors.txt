@@ -1,0 +1,9 @@
+############################################################################ #
+# List of VF users, which can indexing WoS journals (from CSV-file)          #
+#                                                                            #
+# Attention!!! Charset - "UTF8"                                              #
+# ########################################################################## #
+
+ufedorov@int.kpfu.ru
+
+mabajramova@int.kpfu.ru
