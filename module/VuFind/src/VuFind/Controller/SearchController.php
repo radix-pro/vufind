@@ -604,4 +604,21 @@ class SearchController extends AbstractSearch
         return (isset($config->Record->next_prev_navigation)
             && $config->Record->next_prev_navigation);
     }
+
+    /** Uj **
+     * Only to make enable script elib2vf.phtml by the next
+     * address: "http://vufind.../Search/Elib2vf"
+     **/
+    public function Elib2vfAction()
+    {
+    }
+
+    /** Uj **
+     * Only to make enable script wos2vf.phtml by the next
+     * address: "http://vufind.../Search/Wos2vf"
+     **/
+    public function Wos2vfAction()
+    {
+    }
+
 }

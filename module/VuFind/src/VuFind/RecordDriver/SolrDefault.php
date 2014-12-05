@@ -1136,6 +1136,18 @@ class SolrDefault extends AbstractBase
      */
     public function getThumbnail($size = 'small')
     {
+        /** Uj: ELIB & WOS covers **/ 
+        $elib_covers_arr = array("ELIB23054212" => "kev.jpg",
+                                 "ELIB18156126" => "uch_hum.jpg",
+                                 "WOS"          => "wos.jpg");
+        $elib_covers_url  = "http://" . $_SERVER["SERVER_NAME"] . DIRNAME($_SERVER["PHP_SELF"]);
+        $elib_covers_url .= "/themes/mybootstrap3/images/covers";
+        foreach ($elib_covers_arr as $elib_issn => $elib_image):
+           if (isset($this->fields["id"]) && strstr($this->fields["id"], "$elib_issn")):
+               return $elib_covers_url ."/". $elib_image;
+           endif;
+        endforeach;
+
         if (isset($this->fields['thumbnail']) && $this->fields['thumbnail']) {
             return $this->fields['thumbnail'];
         }
@@ -1886,9 +1898,18 @@ class SolrDefault extends AbstractBase
     /** Uj **
      * It is not RUSMARC record, if we came here
      * So, always return false here
-     */
-    public function is_Rusmarc()
+     **/
+    public function is_Rusmarc ()
     {
-        return false;
+    	return false;
+    }
+
+    /** Uj **
+     * Output value of any given field (from "schema.xml")
+     **/
+    public function getFieldValue($field_name)
+    {
+        return isset($this->fields["$field_name"])
+            ? $this->fields["$field_name"] : '';
     }
 }

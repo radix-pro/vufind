@@ -1,0 +1,205 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors','Off');
+
+/* ************************************************************************ */
+/* Define article's fulltext URL by DOI or by Google Scholar Search         */
+/*                                                                          */
+/* Input:  $show_fulltext_link                                              */
+/* Return: $wos_fulltext_title, $wos_fulltext_url                           */
+/*                                                                          */
+/* P.S. Work only with WoS XML records                                      */
+/* ************************************************************************ */
+$WOS_OpenURL_FullText = "http://dx.doi.org";
+$WOS_OpenURL_Scholar  = "http://scholar.google.com/scholar_lookup";
+
+$wos_fulltext_title = "Полный текст";
+$wos_fulltext_url   = "";
+
+$recordType = $this->driver->getFieldValue('recordtype');
+$recordType = strtoupper(trim($recordType));
+
+if ($show_fulltext_link != ""):        /* Don't show fulltext link if empty */ 
+if ($recordType == "WOS"):                  /* Perform only WoS XML records */
+
+    $wos_record_format = $this->driver->getFieldValue('format');
+    if ($wos_record_format != ""):           /* Return array or emp. string */
+        $wos_record_format = $wos_record_format[0];
+        $wos_record_format = strtoupper(trim($wos_record_format));
+    endif;
+
+    if ($wos_record_format == "ARTICLE"):
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    /* Only articles                                                        */
+                                                              /* Define DOI */
+    $wos_record_DOI = $this->driver->getFieldValue('doi');
+    $wos_record_DOI = trim($wos_record_DOI);
+
+    if ($wos_record_DOI != ""):
+        $wos_fulltext_url = $WOS_OpenURL_FullText . "/" . $wos_record_DOI;
+
+        if (strtolower(trim($show_fulltext_link)) == "iframe"):
+            $wos_fulltext_label = $wos_fulltext_url;
+        else:                                                /* Let be so ! */
+            $wos_fulltext_label = $wos_fulltext_title;
+        endif;
+
+    else:                 /* No DOI => use Google Scholar Search (ask V.U.) */
+
+        $wos_record_issn    = $this->driver->getFieldValue('issn');
+        $wos_record_journal = $this->driver->getFieldValue('hierarchy_top_title');
+        $wos_record_title   = $this->driver->getFieldValue('title');
+        $wos_record_year    = $this->driver->getFieldValue('publishDate');
+        $wos_record_volume  = $this->driver->getFieldValue('container_volume');
+
+        if (is_array($wos_record_issn)):
+            $wos_record_issn = $wos_record_issn[0];
+        endif;
+        $wos_record_issn = trim($wos_record_issn);
+
+        if (is_array($wos_record_journal)):
+            $wos_record_journal = $wos_record_journal[0];
+        endif;
+        $wos_record_journal = trim($wos_record_journal);
+
+        if (is_array($wos_record_title)):
+            $wos_record_title = $wos_record_title[0];
+        endif;
+        $wos_record_title = trim($wos_record_title);
+
+        if (is_array($wos_record_year)):
+            $wos_record_year = $wos_record_year[0];
+        endif;
+        $wos_record_year = trim($wos_record_year);
+
+        if (is_array($wos_record_volume)):
+            $wos_record_volume = $wos_record_volume[0];
+        endif;
+        $wos_record_volume = trim($wos_record_volume);
+
+        $scholar_get_vars = "";                 /* Build Scholar GET-string */
+
+        if ($wos_record_title != "" 
+            && ($wos_record_issn != "" || $wos_record_journal != "")
+            && ($wos_record_year != "" || $wos_record_volume  != "")):
+                                                            /* Let be so !  */
+            if ($wos_record_issn != ""):
+                $scholar_get_vars .= "&issn=" . urlencode($wos_record_issn);
+            endif;
+
+            if ($wos_record_journal != ""):
+                $scholar_get_vars .= "&journal=" . urlencode($wos_record_journal);
+            endif;
+
+            if ($wos_record_title != ""):
+                $scholar_get_vars .= "&title=" . urlencode($wos_record_title);
+            endif;
+
+            if ($wos_record_year != ""):
+                $scholar_get_vars .= "&publication_year=" . urlencode($wos_record_year);
+            endif;
+
+            if ($wos_record_volume != ""):
+                $scholar_get_vars .= "&volume=" . urlencode($wos_record_volume);
+            endif;
+
+            if ($scholar_get_vars != ""):
+                $wos_fulltext_url = $WOS_OpenURL_Scholar . "?" . $scholar_get_vars;
+
+                if (strtolower(trim($show_fulltext_link)) == "iframe"):
+                    $wos_fulltext_label = "Поиск текста в Google Scholar";
+                else:                                        /* Let be so ! */
+                    $wos_fulltext_label = $wos_fulltext_title;
+                endif;
+                                                            /* Scholar icon */
+                $scholar_icon_url   = $this->url('home') . "themes/mybootstrap3/images/GS.gif";
+                $scholar_icon_txt   = "Поиск полного текста в Goocle Scholar";
+                $wos_fulltext_label = "<img src='$scholar_icon_url' width='16' height='16' title='$scholar_icon_txt'>" 
+                                    . "&nbsp;" . $wos_fulltext_label;
+
+                if ($show_fulltext_link = "iframe"):
+                    $show_fulltext_link = "newwin";                    /* ! */
+                endif;  /* Scholar URL don't wont to open inside Iframe !!! */
+            endif;      /* MSIE return warning, that  protected from frames */
+
+        endif;
+    
+    endif;
+
+    /*                                                                      */
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    endif;
+                                            /* Target: iframe, newwin, self */
+    if ($wos_fulltext_url != ""):
+                               /* Redirect script (for fulltext statistics) */
+        $go2url_script    = $this->url('home') . "record/go2url";
+        $recordID         = $this->driver->getUniqueID();
+        $searchEngine     = $this->searchClassId; /* Solr, Summon, Combined */
+        $recordID         = urlencode($recordID);
+        $searcEngine      = urlencode($searchEngine);
+        $wos_fulltext_url = urlencode($wos_fulltext_url);
+        $wos_fulltext_url = "{$go2url_script}?url={$wos_fulltext_url}"
+                          . "&record={$recordID}&engine={$searchEngine}";
+
+        switch (strtolower(trim($show_fulltext_link))):
+          case ("iframe"):         /* JS function to open link iside iFrame */
+                 $wos_fulltext_ttl = "Показать документ во встроенном окне";
+                 $wos_fulltext_url = "<a href='$wos_fulltext_url' onClick=\"JS_ShowHideIframe('iframeDivId', 'iframeWinId', '$wos_fulltext_url', '#iframeWosAnchor'); return false;\" target='iframeWos' title='$wos_fulltext_ttl'>$wos_fulltext_label</a>";
+
+                 if (!isset($GLOBALS["wos_js_showhide_func"]) || $GLOBALS["wos_js_showhide_func"] != "Y"):
+                     echo "<script language='JavaScript'><!--
+                           function JS_ShowHideIframe(ifrDivId, ifrWinId, ifrDocUrl, ifrAnchor) {
+                           var ifrDiv = document.getElementById(ifrDivId);
+                           var ifrWin = document.getElementById(ifrWinId).contentWindow;
+                           if(ifrDiv.style.display == 'none') 
+                             {
+                              ifrDiv.style.display = '';
+                              ifrWin.location.href = ifrDocUrl;
+                              location.href = ifrAnchor;
+                             }
+                           else
+                             { 
+                              /** Used by citing & fulltext **
+                              ifrDiv.style.display = 'none';     
+                              **/
+                              ifrWin.location.href = ifrDocUrl;
+                             }
+                           return; }
+                     //--></script>";
+                     $GLOBALS["wos_js_showhide_func"] = "Y";
+                 endif;
+                 break;
+
+          case ("newwin"):
+                 $wos_fulltext_ttl = "Показать документ в отдельном окне";
+                 $wos_fulltext_url = "<a href='$wos_fulltext_url' onClick=\"WosNewWin('$wos_fulltext_url'); return false\" title='$wos_fulltext_ttl'>$wos_fulltext_label</a>";
+
+                 if (!isset($GLOBALS["wos_js_newwin_func"]) || $GLOBALS["wos_js_newwin_func"] != "Y"):
+                     echo '<script language="JavaScript"><!--
+                           function WosNewWin(url) {
+                           var w = Math.floor(screen.width  * 0.9);
+                           var h = Math.floor(screen.height * 0.8);
+                           var options = "width=" + w + ",height=" + h + ",";
+                           options += "screenX=10,screenY=10,left=10,top=10,";
+                           options += "resizable=no,scrollbars=yes,status=no,";
+                           options += "menubar=yes,toolbar=no,location=no,directories=no";
+                           var newWin = window.open(url, "newWin", options);
+                           newWin.focus();
+                          }
+                     //--></script>';
+                     $GLOBALS["wos_js_newwin_func"] = "Y";
+                 endif;
+                 break;
+
+          case ("self"):                              /* We are inside list */
+                 $wos_fulltext_ttl = "Показать документ";
+                 $wos_fulltext_url = "<a href='$wos_fulltext_url' title='$wos_fulltext_ttl'>$wos_fulltext_label</a>";
+                 break;
+        endswitch;
+
+    endif;
+
+endif;
+endif;
+/* ************************************************************************ */
+?>

@@ -1,0 +1,17 @@
+############################################################################ #
+# List of VF users, which can use statistics                                 #
+#                                                                            #
+# Attention!!! Charset - "UTF8"                                              #
+# ########################################################################## #
+
+ufedorov@int.kpfu.ru
+
+rkulakov@int.kpfu.ru
+
+1ialexan@int.kpfu.ru
+
+ialexand@int.kpfu.ru
+
+vkuzmina@int.kpfu.ru
+
+estrukov@int.kpfu.ru

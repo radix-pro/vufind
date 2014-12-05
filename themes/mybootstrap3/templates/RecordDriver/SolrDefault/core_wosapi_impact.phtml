@@ -1,0 +1,82 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors','Off');
+
+/* ************************************************************************ */
+/* Output html-link to WoS impact factor page                               */
+/* Input: unique identifiers of current record (WoS UT or DOI),             */
+/*                                                                          */
+/* P.S. Work only with WoS XML records                                      */
+/* ************************************************************************ */
+$WOS_OpenURL_IMPACT = "http://ws.isiknowledge.com/cps/openurl/service?url_ver=Z39.88-2004&rft_val_fmt=info:ofi/fmt:kev:mtx:journal&rft.genre=journal";
+            /* Impact URL may be received from WoS API, but is doesn't work */
+
+$recordID = $this->driver->getUniqueID();
+$recordID = strtoupper(trim($recordID));  /* WOS{issn}-year-vol-issue-wosId */
+
+$wos_impact_factor = "";
+
+if (substr($recordID, 0, 3) == "WOS"):      /* Perform only WoS XML records */
+                                           
+    if (substr_count($recordID, "-") < 1):               /* It is journal ! */
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    /* Journals: impact factor URL                                          */
+                                                   /* Define journal's ISSN */
+    $wos_journal_issn = substr($recordID, 3, 8);
+    $wos_journal_issn = substr($wos_journal_issn, 0, 4) . "-"
+                      . substr($wos_journal_issn, 4, 4);
+    $WOS_ISSN = trim($wos_journal_issn);
+
+    if ($WOS_ISSN != ""):          /* JS function to open link iside iFrame */
+        echo "<script language='JavaScript'><!--
+              function JS_ShowHideIframe(ifrDivId, ifrWinId, ifrDocUrl, ifrAnchor) {
+              var ifrDiv = document.getElementById(ifrDivId);
+              var ifrWin = document.getElementById(ifrWinId).contentWindow;
+              if(ifrDiv.style.display == 'none') 
+                {
+                 ifrDiv.style.display = '';
+                 ifrWin.location.href = ifrDocUrl;
+                 location.href = ifrAnchor;
+                }
+              else
+                { 
+                 ifrDiv.style.display = 'none';     
+                }
+              return; }
+        //--></script>";
+
+        /** NewWin **
+        echo '<script language="JavaScript"><!--
+              function WosNewWin(url) {
+              var w = Math.floor(screen.width  * 0.9);
+              var h = Math.floor(screen.height * 0.8);
+              var options = "width=" + w + ",height=" + h + ",";
+              options += "screenX=10,screenY=10,left=10,top=10,";
+              options += "resizable=no,scrollbars=yes,status=no,";
+              options += "menubar=yes,toolbar=no,location=no,directories=no";
+              var newWin = window.open(url, "newWin", options);
+              newWin.focus();
+             }
+        //--></script>';
+        **/
+
+        $wos_impact_factor   = "Импакт фактор";
+        $wos_impact_open_url = $WOS_OpenURL_IMPACT . "&" . "rft.issn=$WOS_ISSN";
+        $wos_impact_open_txt = "Показать импакт фактор во встроенном окне";
+        $wos_impact_factor   = "<a style='font-size:100%' href='$wos_impact_open_url' onClick=\"JS_ShowHideIframe('iframeDivId', 'iframeWinId', '$wos_impact_open_url', '#iframeWosAnchor'); return false;\" target='iframeWos' title='$wos_impact_open_txt'>$wos_impact_factor</a>";
+        /** NewWin **
+        $wos_impact_open_txt = "Показать импакт фактор в отдельном окне";
+        $wos_impact_factor   = "<a style='font-size:100%' onClick=\"WosNewWin('$wos_impact_open_url'); return false\" href='$wos_impact_open_url' title='$wos_impact_open_txt'>$wos_impact_factor</a>";
+        **/
+
+        echo "<b>$wos_impact_factor</b>";
+        echo "<br>";
+    endif;
+
+    /*                                                                      */
+    /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    endif;
+
+endif;
+/* ************************************************************************ */
+?>

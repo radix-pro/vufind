@@ -1,0 +1,64 @@
+AB;Abstract                                                  ;description
+AF;Author Full Name                                          ;authors
+AR;Article Number
+AU;Authors                                                   ;authors2
+BA;Book Authors
+BE;Editors
+BF;Book Authors Full Name
+BN;International Standard Book Number (ISBN)                 ;ISBN
+BP;Beginning Page                                            ;page_start
+BS;Book Series Subtitle
+C1;Author Address
+CA;Group Authors
+CL;Conference Location
+CR;Cited References
+CT;Conference Title
+CY;Conference Date
+D2;Book Digital Object Identifier (DOI)                      ;DOI2
+DE;Author Keywords                                           ;keywords2
+DI;Digital Object Identifier (DOI)                           ;DOI
+DT;Document Type                                             ;type
+EF;End of File
+EI;Electronic International Standard Serial Number (eISSN)   ;ISSN2
+EM;E-mail Address
+EP;Ending Page                                               ;page_end
+ER;End of Record
+FN;File Name
+FU;Funding Agency and Grant Number
+FX;Funding Text
+GA;Document Delivery Number
+GP;Book Group Authors
+HO;Conference Host
+ID;Keywords Plus                                             ;keywords
+IS;Issue                                                     ;parent_issue
+J9;29-Character Source Abbreviation
+JI;ISO Source Abbreviation
+LA;Language                                                  ;language
+MA;Meeting Abstract
+NR;Cited Reference Count                                     ;cited_reference
+OI;ORCID Identifier (Open Researcher and Contributor ID)
+P2;Chapter Count (Book Citation Index)
+PA;Publisher Address
+PD;Publication Date
+PG;Page Count
+PI;Publisher City                                            ;parent_city
+PN;Part Number
+PT;"Publication Type (J=Journal; B=Book; S=Series; P=Patent)";parent_type
+PU;Publisher                                                 ;parent_publ
+PY;Year Published                                            ;parent_year
+RI;ResearcherID Number
+RP;Reprint Address
+SC;Research Areas                                            ;topic
+SE;Book Series Title
+SI;Special Issue
+SN;International Standard Serial Number (ISSN)               ;parent_issn
+SO;Publication Name                                          ;parent_title
+SP;Conference Sponsors
+SU;Supplement
+TC;Web of Science Core Collection Times Cited Count          ;cited_core
+TI;Document Title                                            ;title
+UT;Accession Number                                          ;wos_unique
+VL;Volume                                                    ;parent_volume
+VR;Version Number
+WC;Web of Science Categories                                 ;topic2
+Z9;Total Times Cited Count (WoS Core, BCI, and CSCD)         ;cited_total

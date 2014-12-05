@@ -67,5 +67,14 @@ class AdminController extends AbstractAdmin
         $view->xml = $xml ? simplexml_load_string($xml) : false;
         return $view;
     }
+
+    /** Uj **
+     * Only to make enable script statistics2.phtml by the next
+     * address: "http://.../vufind/Admin/Statistics2"
+     **/
+    public function Statistics2Action()
+    {
+    }
+
 }
 
