@@ -1,4 +1,7 @@
 *
 !.gitignore
 !config.main.ini
+!combined.ini
+!searchbox.ini
+
 

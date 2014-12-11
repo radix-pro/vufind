@@ -126,9 +126,15 @@ class SolrMarc extends SolrDefault
     public function getAllSubjectHeadings()
     {
         // These are the fields that may contain subject headings:
-        $fields = array(
-            '600', '610', '611', '630', '648', '650', '651', '653', '655', '656'
-        );
+        if ($this->is_Rusmarc() == true):   /** Uj **/
+            $fields = array(
+                '600', '601', '605', '606', '610'
+            );
+        else:
+            $fields = array(
+                '600', '610', '611', '630', '648', '650', '651', '653', '655', '656'
+            );
+        endif;
 
         // This is all the collected data:
         $retval = array();
@@ -303,7 +309,14 @@ class SolrMarc extends SolrDefault
      */
     public function getGeneralNotes()
     {
-        return $this->getFieldArray('500');
+        //return $this->getFieldArray('500');
+
+        /** Uj **/
+        if ($this->is_Rusmarc() == true):
+            return $this->getFieldArray('300');
+        else:
+            return $this->getFieldArray('500');
+        endif;
     }
 
     /**
@@ -583,7 +596,14 @@ class SolrMarc extends SolrDefault
      */
     public function getSummary()
     {
-        return $this->getFieldArray('520');
+        //return $this->getFieldArray('520');
+
+        /** Uj **/
+        if ($this->is_Rusmarc() == true):
+            return $this->getFieldArray('330');
+        else:
+            return $this->getFieldArray('520');
+        endif;
     }
 
     /**
@@ -603,7 +623,14 @@ class SolrMarc extends SolrDefault
      */
     public function getTargetAudienceNotes()
     {
-        return $this->getFieldArray('521');
+        //return $this->getFieldArray('521');
+
+        /** Uj **/
+        if ($this->is_Rusmarc() == true):
+            return $this->getFieldArray('333');
+        else:
+            return $this->getFieldArray('521');
+        endif;
     }
 
     /**
@@ -1145,4 +1172,500 @@ class SolrMarc extends SolrDefault
     {
         return $this->getFieldArray('035', 'a', true);
     }
+
+    /** Uj **
+     * Define type of marc record
+     * Return true for rusmarc, otherwise - false
+     */
+    public function is_Rusmarc ()
+    {
+
+    $marctype_fld = "marc_type";       /* Defined in books.inc & schema.xml */
+    $marctype_rus = "rusmarc";
+    $marctype_val = "";
+
+    if (isset($this->fields["$marctype_fld"])): 
+        $marctype_val = $this->fields["$marctype_fld"];   /* Return array ! */
+
+        if (is_array($marctype_val)):
+            $marctype_val = trim(implode($marctype_val, ""));
+        endif;
+    endif;
+
+    if (strtolower($marctype_val) == strtolower($marctype_rus)
+        || (count($this->getFieldArray('801')) > 0)):  /* Return arr or obj */
+        $is_rusmarc = true;
+    else:
+        $is_rusmarc = false;
+    endif;
+
+    return $is_rusmarc;
+    }
+
+
+    /** Uj **
+     * Perform record LEADER, position 17 
+     * If not {0,1} => not confirmed record
+     */
+    public function getLeader17()
+    {
+    $leader = $this->marcRecord->getLeader();
+    $pos17  = $leader[17];
+
+    if ($pos17 != " " && $pos17 != "1"):
+        return false;                               /* Not confirmed record */
+    endif;
+
+    return true;
+    }
+
+
+    /** Uj **
+     * Convert all records of some Marc tag to assoc. array
+     * Based on functions getFieldArray() & getSubfieldArray()
+     * P.S. $multiSep used to separate same subfields (ex: b, b, ...)
+     * Return array
+     */
+    public function Tag2AssocArray($marcTag, $subfields = null, $multiSep = null)
+    {
+
+    $tagArray = array();           // Result array with structured tag's data
+
+    if (!is_array($subfields)) {
+        $subfields = array();           // Default: all subfields (let be so)
+    }
+
+    $records = $this->marcRecord->getFields($marcTag); // List of tag records 
+    if (!is_array($records)) {
+        return $tagArray;          // Return empty array if tag doesn't exist
+    }
+
+    $j=0;                                                     // Records loop 
+    foreach ($records as $currentRecord):
+             $allSubfields = $currentRecord->getSubfields();
+
+             if (count($allSubfields) > 0):
+                 foreach ($allSubfields as $currentSubfield): 
+                                                            // Subfields loop
+                 if (in_array($currentSubfield->getCode(), $subfields)
+                     || empty($subfields) == true):         // All subdields
+                     $data = trim($currentSubfield->getData());
+                     if (!empty($data)): 
+                         $currentSubfieldCode = $currentSubfield->getCode();
+                         if (!isset($tagArray[$j]["$currentSubfieldCode"])
+                             || !isset($multiSep) || $multiSep == ""):
+                             $tagArray[$j]["$currentSubfieldCode"]  = $data;
+                         else:
+                             $tagArray[$j]["$currentSubfieldCode"] .= $multiSep . $data;
+                         endif;
+                     endif;
+                 endif;
+
+                 endForeach;
+             endif;
+
+             $j++;
+    endForeach;
+
+    return $tagArray;
+    }
+
+
+    /** Uj **
+     * Write authors tags 700,701,702,710,711,712 from marc record to array
+     * Return array
+     */
+    public function RusmarcAuthors($tagsList, $fioScheme)
+    {
+    $tagsList  = trim($tagsList);
+    $fioScheme = trim($fioScheme);
+
+    if ($tagsList == ""):
+        return;
+    endif;
+
+    $authors_arr = array();                  // Result array with authors info
+
+    $tagsList_arr = EXPLODE(":", $tagsList);           // 700:710:701...-> arr
+
+    $t=0;                                        // Tags loop (in given order)
+    while ($t < count($tagsList_arr)):
+           $authorTag = trim($tagsList_arr[$t]);
+
+           if ($authorTag == "700" || $authorTag == "701" || $authorTag == "702"):
+               $auth_arr = $this->ParseFizAuthor($authorTag, $fioScheme);
+           endif;
+           if ($authorTag == "710" || $authorTag == "711" || $authorTag == "712"):
+               $auth_arr = $this->ParseOrgAuthor($authorTag, ", ");
+           endif;
+
+           if (is_array($auth_arr) && count($auth_arr) > 0):
+               $authors_arr = array_merge($authors_arr, $auth_arr);
+               unset($auth_arr);
+           endif;
+
+           $t++;
+    endwhile;
+
+    return $authors_arr;
+    }
+
+
+    /** Uj **
+     * Parse 700, 701, 702 tags (persons)
+     * Return array
+     */
+    public function ParseFizAuthor($authorTag, $fioScheme)
+    {
+
+    $fiz_arr = $this->Tag2AssocArray($authorTag, array('a', 'b', 'g', '4'));
+                  /* P.S. Subfield '4' will be used to define author's role */
+
+    if (!is_array($fiz_arr) || count($fiz_arr) < 1):
+        return;                              /* No any author for given tag */
+    endif;
+
+    $auth_arr = array();
+                             /* Perform authors according with given scheme */
+    $t=0;                        
+    while ($t < count($fiz_arr)):  /* Authors loop (may be several for tag) */
+           if (isset($fiz_arr[$t]['a'])):
+               $fiz_a = $fiz_arr[$t]['a'];
+           else:
+               $fiz_a = "";
+           endif;
+           if (isset($fiz_arr[$t]['b'])):
+               $fiz_b = $fiz_arr[$t]['b'];
+           else:
+               $fiz_b = "";
+           endif;
+           if (isset($fiz_arr[$t]['g'])):
+               $fiz_g = $fiz_arr[$t]['g'];
+           else:
+               $fiz_g = "";
+           endif;
+           if (isset($fiz_arr[$t]['4'])):
+               $fiz_4 = $fiz_arr[$t]['4'];
+           else:
+               $fiz_4 = "";
+           endif;
+
+           $fiz_info = "";
+
+           switch ($fioScheme):
+             case ("ab"):
+                   $fiz_info = $fiz_a . " " . $fiz_b;
+                   break;
+
+             case ("ag"):
+                   $fiz_info = $fiz_a . " " . $fiz_g;
+                   break;
+
+             case ("ab[g]"):                  /* If "b" is empty => use "g" */
+                   $fiz_info = $fiz_a;
+                   if ($fiz_b != ""):
+                       $fiz_info = $fiz_info . " " . $fiz_b;
+                   endif;
+                   if ($fiz_b == "" && $fiz_g != ""):
+                       $fiz_info = $fiz_info . " " . $fiz_g;
+                   endif;
+                   break;
+
+             default:                          /* ab(g): join all evailable */
+                   $fiz_info = $fiz_a;
+                   if ($fiz_b != "" && $fiz_g != ""):
+                       $fiz_info = $fiz_info . " " . $fiz_b . " (" . $fiz_g . ")";
+                   else:
+                       $fiz_info = $fiz_info . " " . $fiz_b . " "  . $fiz_g;
+                   endif;
+                   break;
+           endswitch;
+
+           $fiz_info = trim($fiz_info);
+                                                     /* Used for href links */
+           /**
+           $fiz_href = $fiz_info;
+           $fiz_href = str_replace("(", "", $fiz_href);
+           $fiz_href = str_replace(")", "", $fiz_href);
+           **/
+           $fiz_href = trim($fiz_a . " " . $fiz_b);        /* Let be so !!! */
+
+           if ($authorTag == "702"):
+               if ($fiz_4 != "" && $fiz_info != ""):
+                   $roleCodes_file   = "local/import/import/rusmarc/tag702role_rusmarc_map.properties";
+                   $roleCodes_prefix = "702_4_";
+
+                   if (!isset($roleCodes_arr) || !is_array($roleCodes_arr)):
+                       $roleCodes_arr = $this->TextFileCodesArray($roleCodes_file);
+                   endif;
+
+                   $roleCode = $roleCodes_prefix . $fiz_4;             /* ! */
+
+                   if (isset($roleCodes_arr["$roleCode"])):
+                       $fiz_role = $roleCodes_arr["$roleCode"];
+                       $fiz_info = $fiz_info . " (" . $fiz_role . ")";
+                   endif;
+               endif;
+           endif;
+
+           if ($fiz_info != ""):
+               $auth_arr[$t]["info"] = $fiz_info;
+               $auth_arr[$t]["href"] = $fiz_href;
+           endif;
+
+           $t++;
+    endwhile;
+
+    return $auth_arr;
+    }
+
+
+    /** Uj **
+     * Parse 710, 711, 712 tags (organizations)
+     * Return array
+     */
+    public function ParseOrgAuthor($authorTag, $multiSep)
+    {
+
+    $org_arr = $this->Tag2AssocArray($authorTag, array('a', 'b'), $multiSep);
+
+    if (!is_array($org_arr) || count($org_arr) < 1):
+        return;                              /* No any author for given tag */
+    endif;
+
+    $auth_arr = array();
+                                   /* Authors loop (may be several for tag) */
+    $t=0;                        
+    while ($t < count($org_arr)):
+           if (isset($org_arr[$t]['a'])):
+               $org_a = $org_arr[$t]['a'];
+           else:
+               $org_a = "";
+           endif;
+           if (isset($org_arr[$t]['b'])):
+               $org_b = $org_arr[$t]['b'];
+           else:
+               $org_b = "";
+           endif;
+
+           if ($org_a != "" && $org_b != ""):
+               $org_info = $org_a . ": " . $org_b;
+               $org_href = $org_a . " "  . $org_b;        /* For href links */
+           else:
+               $org_info = $org_a .        $org_b;
+               $org_href = $org_info;
+           endif;
+
+           $org_info = trim($org_info);
+
+           if (isset($multiSep) && trim($multiSep) != ""):
+               $org_href = str_replace(trim($multiSep), "", $org_href);
+           endif;                       /* Prevent from deleting all spaces */
+
+           if ($org_info != ""):
+               $auth_arr[$t]["info"] = $org_info;
+               $auth_arr[$t]["href"] = $org_href;
+           endif;
+
+           $t++;
+    endwhile;
+
+    return $auth_arr;
+    }
+
+
+    /** Uj **
+     * File lines "code = name" -> array[code] = name
+     * Return array
+     */
+    public function TextFileCodesArray($textfile_path)
+    {
+    $textfile_path = trim($textfile_path);
+
+    if (!is_file($textfile_path)):
+        return;
+    endif;
+
+    $textfile_arr = @file($textfile_path);             /* File lines => arr */
+
+    if (!is_array($textfile_arr) || count($textfile_arr) < 1):
+        return;                                            /* File is empty */
+    endif;
+
+    $codes_arr = array();
+
+    $l=0;                                                /* File lines loop */
+    while ($l < count($textfile_arr)):
+           $line = trim($textfile_arr[$l]);
+
+           $pos_sep = strpos($line, "=");            /* Format: code = name */
+           if ($pos_sep === false || $pos_sep == 0):
+               $l++;
+               continue;
+           endif;                    /* P.S. strpos() - remember about UTF8 */
+
+           $code = trim(substr($line, 0, $pos_sep));
+           $name = trim(substr($line, $pos_sep +1));
+
+           $codes_arr["$code"] = $name;
+           $l++;
+    endwhile;
+
+    unset($textfile_arr);
+
+    return $codes_arr;
+    }
+
+
+    /** Uj **
+     * Find in given Tag links for other documents
+     * Links placement (ex): 452[1] -> 001RU\LSL\ADO\5
+     *
+     * Problem: may be many [1]-subfields for given tag
+     * Theoretically link placed in 1-st of them
+     */
+    public function Tag45X_Clones($Tag45X, $part1_only = null)
+    {
+                                                                 /* Part-1 */
+
+    $tagArray = array();          // Result array with [1]-subfield data sets
+
+    $records = $this->marcRecord->getFields($Tag45X);  // List of tag records 
+    if (!is_array($records)) {
+        return $tagArray;          // Return empty array if tag doesn't exist
+    }
+
+    $multiSep = null;                                         // Let be so !
+    $j=0;                                                     // Records loop 
+    foreach ($records as $currentRecord):
+             $allSubfields = $currentRecord->getSubfields();
+
+             if (count($allSubfields) > 0):
+                 $current_1subfield_code = "";
+                 foreach ($allSubfields as $currentSubfield): 
+                                                            // Subfields loop
+                 $data = trim($currentSubfield->getData());
+                 if (!empty($data)): 
+                     $currentSubfieldCode = $currentSubfield->getCode();
+                     if (trim($currentSubfieldCode) == "1"):  /* Start new  */
+                         $current_1subfield_code = $data;     /* [1]-subset */
+                         $current_1subfield_sub3 = substr($data,0,3);
+                         $tagArray[$j]["$current_1subfield_sub3"]["$currentSubfieldCode"] = $data;
+                     else:
+                         if ($current_1subfield_code != ""): /*Add to subset*/
+                             $current_1subfield_sub3 = substr($current_1subfield_code,0,3);
+                             if (!isset($tagArray[$j]["$current_1subfield_sub3"]["$currentSubfieldCode"])
+                                 || !isset($multiSep) || $multiSep == ""):
+                                 $tagArray[$j]["$current_1subfield_sub3"]["$currentSubfieldCode"]  = $data;
+                             else:
+                                 $tagArray[$j]["$current_1subfield_sub3"]["$currentSubfieldCode"] .= $multiSep . $data;
+                             endif;
+                         endif;
+                     endif;
+                 endif;
+
+                 endForeach;
+             endif;
+
+             $j++;
+    endForeach;
+
+    if (isset($part1_only) && trim($part1_only) != ""):                /* ! */
+        return $tagArray;
+    endif;
+                                                                  /* Part-2 */
+
+    if (!is_array($tagArray) || count($tagArray) < 1):
+        return;                           /* No any record with subfield #1 */
+    endif;
+
+    $clones_arr = array();                                  /* Result array */
+          
+    $j=0;                          /* Records loop (may be several for tag) */
+    while ($j < count($tagArray)):
+           if (isset($tagArray[$j]["001"]["1"])):
+               $cloneLink = trim($tagArray[$j]["001"]["1"]);
+               $cloneLink = substr($cloneLink, 3);      /* Cut prefix "001" */
+           else:
+               $cloneLink = "";
+           endif;
+           if (isset($tagArray[$j]["200"]["a"])):
+               $cloneName = trim($tagArray[$j]["200"]["a"]);
+           else:
+               $cloneName = "";
+           endif;
+           if (isset($tagArray[$j]["200"]["b"])):
+               $cloneKind = trim($tagArray[$j]["200"]["b"]);
+           else:
+               $cloneKind = "";
+           endif;
+
+           if (trim($cloneLink . $cloneName . $cloneKind) == ""):
+               $j++;
+               continue;
+           endif;
+                                  /* Perform links in style of "lslkey.bsh" */
+           if ($cloneLink != ""):
+               $lslkey = "";
+
+               $i=0;
+               while ($i < strlen($cloneLink)):
+                      $c = substr($cloneLink, $i, 1);
+
+                      if (!(($c >= '1' && $c <= '9') ||
+                            ($c >= 'A' && $c <= 'Z') || ($c >='a' && $c <= 'z') || 
+                            ($c >= 'À' && $c <= 'ß') || ($c >='à' && $c <= 'ÿ'))):
+
+                          $s = dechex(ord($c));
+
+                          switch (strlen($s)):
+                            case (1): 
+                                  $s = "00" . $s; 
+                                  break;
+                            case (2): 
+                                  $s = "0"  . $s; 
+                                  break;
+                          endswitch;
+
+                          $s = STRTOUPPER($s);  /* Rodion (for "\": c -> C) */
+                          $lslkey .= $s;
+                      else:
+                          $lslkey .= $c;
+                      endif;
+
+                      $i++;
+               endwhile;
+
+               $cloneLink = trim($lslkey);
+           endif;
+
+           $clones_arr[$j]["cloneLink"] = $cloneLink;
+           $clones_arr[$j]["cloneName"] = $cloneName;
+           $clones_arr[$j]["cloneKind"] = $cloneKind;
+
+           $j++;
+    endwhile;
+
+    return $clones_arr;
+    }
+
+
+    /** Uj **
+     * Return char from given position of LEADER record
+     *
+     */
+    public function getLeaderPos($pos)
+    {
+    $pos = intval($pos);
+    $leader = $this->marcRecord->getLeader();
+
+    if (isset($leader[$pos])):
+        $leader_pos = $leader[$pos];
+    else:
+        $leader_pos = "";
+    endif;
+
+    return $leader_pos;
+    }
+
 }

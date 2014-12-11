@@ -30,8 +30,32 @@
     <? if (!empty($tabs)): ?></div><? endif; ?>
   </div>
 <? else: ?>
+
+  <?  /* Uj (don't show "technical" search words) */
+  if (isset($_GET["type"]) && strtolower($_GET["type"]) == "ids"):
+  if (isset($_GET["lookfor"]) && trim($_GET["lookfor"]) != ""):
+      $this->lookfor = "";
+  endif;
+  endif;
+  ?>
+
   <form role="search" class="navbar-form navbar-left" method="get" action="<?=$this->url($basicSearch)?>" name="searchForm" id="searchForm" autocomplete="off">
     <?= $this->render('search/searchTabs'); ?>
+
+    <?                          /* Uj: subtitle under input field (for V.U) */
+    switch (strtolower($this->searchClassId)):
+      case ("solr"):
+            echo "<font style='font-size:11px; color:#000'><b>" . $this->transEsc('Catalog_search_subtitle')  . "</b></font><br>";
+            break;
+      case ("summon"):
+            echo "<font style='font-size:11px; color:#000'><b>" . $this->transEsc('Summon_search_subtitle')   . "</b></font><br>";
+            break;
+      case ("combined"):
+            echo "<font style='font-size:11px; color:#000'><b>" . $this->transEsc('Combined_search_subtitle') . "</b></font><br>";
+            break;
+    endswitch;
+    ?>
+
     <input class="form-control search-query<? if($this->searchbox()->autocompleteEnabled($this->searchClassId)):?> autocomplete searcher:<?=$this->escapeHtmlAttr($this->searchClassId) ?><? endif ?>" id="searchForm_lookfor" type="text" name="lookfor" value="<?=$this->escapeHtmlAttr($this->lookfor)?>"/>
     <? if ($handlerCount > 1): ?>
       <select class="form-control" id="searchForm_type" name="type" data-native-menu="false">

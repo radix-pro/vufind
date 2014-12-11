@@ -1,0 +1,47 @@
+<? 
+/* ************************************************************************ */
+/* Output info from tags LEADER, 106.a, 455.210.d (RUSMARC)                 */
+/*                                                                          */
+/* ************************************************************************ */
+
+$leader_pos7 = $this->driver->getLeaderPos(7);
+$leader_pos7 = strtolower(trim($leader_pos7));
+
+$tag106_arr = $this->driver->Tag2AssocArray("106", array('a'));
+if (is_array($tag106_arr) && isset($tag106_arr["0"]["a"])):
+    $tag106a = strtolower(trim($tag106_arr["0"]["a"]));
+else:
+    $tag106a = "";
+endif;
+
+if ($leader_pos7 == "m" && $tag106a == "s"):                      /* Ebooks */
+    $tag455_arr = $this->driver->Tag45X_Clones('455', '*');
+
+    if (isset($tag455_arr[0]["210"]["d"])):
+        $tag455_year = trim($tag455_arr[0]["210"]["d"]);
+
+        if (is_numeric($tag455_year) && strlen($tag455_year) == 4):
+            $tag455_210 = "";
+
+            if (isset($tag455_arr[0]["210"]["a"])):
+                $tag455_210a = trim($tag455_arr[0]["210"]["a"]);
+                $tag455_210 .= $tag455_210a . " ";
+            endif;
+
+            if (isset($tag455_arr[0]["210"]["c"])):
+                $tag455_210c = trim($tag455_arr[0]["210"]["c"]);
+                $tag455_210 .= $tag455_210c . " ";
+            endif;
+
+            $tag455_210 .= $tag455_year;
+            $tag455_210  = trim($tag455_210);
+
+            $Electronic_copy = "Электронная копия";
+            echo "$Electronic_copy: $tag455_210";
+        endif;
+
+    endif;
+endif;
+
+/* ************************************************************************ */
+?>

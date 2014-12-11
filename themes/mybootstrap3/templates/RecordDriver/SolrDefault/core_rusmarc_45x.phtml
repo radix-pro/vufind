@@ -1,0 +1,98 @@
+<? 
+/* ************************************************************************ */
+/* Output info from tags 45X (RUSMARC)                                      */
+/*                                                                          */
+/* ************************************************************************ */
+
+$Related_documents = "Связанные документы";
+                                     /* P.S. In future use languages/ru.ini */
+
+$clones451 = $this->driver->Tag45X_Clones('451');  $title451 = "Другое издание";
+$clones452 = $this->driver->Tag45X_Clones('452');  $title452 = "Другое издание";
+$clones453 = $this->driver->Tag45X_Clones('453');  $title453 = "Перевод";
+$clones454 = $this->driver->Tag45X_Clones('454');  $title454 = "Оригинал";
+$clones455 = $this->driver->Tag45X_Clones('455');  $title455 = "Оригинал";
+$clones456 = $this->driver->Tag45X_Clones('456');  $title456 = "Перепечатка";
+
+$clones481 = $this->driver->Tag45X_Clones('481');  $title481 = "Также в этом переплете";
+$clones482 = $this->driver->Tag45X_Clones('482');  $title482 = "Приплетено к";
+
+
+global $baseUrl; $baseUrl = $this->url();
+global $tags45X; $tags45X = "";
+
+$tags45X  = Tag45X_html($clones451, $title451);
+$tags45X  = Tag45X_html($clones452, $title452);
+$tags45X  = Tag45X_html($clones453, $title453);
+$tags45X  = Tag45X_html($clones454, $title454);
+$tags45X  = Tag45X_html($clones455, $title455);
+$tags45X  = Tag45X_html($clones456, $title456);
+
+$tags45X  = Tag45X_html($clones481, $title481);
+$tags45X  = Tag45X_html($clones482, $title482);
+
+
+if ($tags45X != ""):
+    echo "<tr valign='top'>";
+    echo "<th>$Related_documents:</th>";
+    echo "<td>$tags45X</td>";
+    echo "</tr>";
+endif;
+
+
+function Tag45X_html ($tag_arr, $tag_title) { /* ************************** */
+global $tags45X, $baseUrl;
+
+if (!isset($tag_arr) || empty($tag_arr)):
+    return $tags45X;
+endif;
+
+$tag_size = count($tag_arr);
+$i=1;
+foreach ($tag_arr as $clone):
+         $cloneLink = $clone['cloneLink'];
+         $cloneName = $clone['cloneName'];
+         $cloneKind = $clone['cloneKind'];
+
+         $cloneName = htmlspecialchars($cloneName);
+         $cloneKind = htmlspecialchars($cloneKind);
+
+         $cloneInfo = "";
+
+         if ($tag_size > 1):
+             $cloneInfo = strval($i) . "." . "&nbsp;";
+         endif;
+
+         if ($cloneKind != ""):
+             $cloneObj = $cloneKind . ". " . $tag_title;
+         else:
+             $cloneObj = $tag_title;
+         endif;
+
+         if ($cloneLink != ""):
+             $hrefUrl = $baseUrl . $cloneLink;
+             if ($cloneName != ""):
+                 $cloneInfo .= "<a href='$hrefUrl' title='$cloneObj'>$cloneName</a>";
+             else:
+                 $cloneInfo .= "<a href='$hrefUrl'>$cloneObj</a>";
+             endif;
+         else:
+             if ($cloneName != ""):
+                 $cloneInfo .= $cloneName . "&nbsp;($cloneObj)";
+             else:
+                 $cloneInfo .= $cloneObj;
+             endif;
+         endif;
+
+         if ($tags45X != ""):
+             $tags45X .= "; " . $cloneInfo;
+         else:
+             $tags45X .= $cloneInfo;
+         endif;
+
+         $i++;
+endforeach;
+
+return $tags45X;
+}
+?>

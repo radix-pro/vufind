@@ -44,7 +44,8 @@
        $go2url_script = $this->url('home') . "record/go2url";
        $recordID      = urlencode($this->driver->getUniqueID());
        $searchEngine  = urlencode($this->searchClassId);    /* Solr, Summon */
-       $fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));
+     /*$fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));*/
+       $fulltext_url  = urlencode($this->proxyUrl($current['url']));
        $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
     ?>
   <!--<a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>"><?=$this->escapeHtml($current['desc'])?></a><br/>-->

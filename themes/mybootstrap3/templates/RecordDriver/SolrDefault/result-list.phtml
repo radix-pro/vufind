@@ -32,15 +32,24 @@
         <? if($this->driver->isCollection()): ?>
           <?=implode('<br>', $this->driver->getSummary()); ?>
         <? else: ?>
-          <? $summAuthor = $this->driver->getPrimaryAuthor(); if (!empty($summAuthor)): ?>
-          <?=$this->transEsc('by')?>
-          <a href="<?=$this->record($this->driver)->getLink('author', $summAuthor)?>"><?
-            $summHighlightedAuthor = $this->driver->getHighlightedAuthor();
-            echo !empty($summHighlightedAuthor)
-                ? $this->highlight($summHighlightedAuthor)
-                : $this->escapeHtml($summAuthor);
-          ?></a>
-          <? endif; ?>
+
+          <? if ($this->driver->is_Rusmarc() == false):
+             /* Uj:  Authors for standart VuFind MARC21 record */ ?>
+
+              <? $summAuthor = $this->driver->getPrimaryAuthor(); if (!empty($summAuthor)): ?>
+              <?=$this->transEsc('by')?>
+              <a href="<?=$this->record($this->driver)->getLink('author', $summAuthor)?>"><?
+                $summHighlightedAuthor = $this->driver->getHighlightedAuthor();
+                echo !empty($summHighlightedAuthor)
+                    ? $this->highlight($summHighlightedAuthor)
+                    : $this->escapeHtml($summAuthor);
+              ?></a>
+              <? endif; ?>
+
+          <? else:  /* Uj: Authors for RUSMARC record */
+              include ("result-list-rusmarc.phtml");
+          endif; ?>
+
 
           <? $journalTitle = $this->driver->getContainerTitle(); $summDate = $this->driver->getPublicationDates(); ?>
           <? if (!empty($journalTitle)): ?>
@@ -138,7 +147,8 @@
             $go2url_script = $this->url('home') . "record/go2url";
             $recordID      = urlencode($this->driver->getUniqueID());
             $searchEngine  = urlencode($this->searchClassId);/* Solr,Summon */
-            $fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));
+          /*$fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));*/
+            $fulltext_url  = urlencode($this->proxyUrl($current['url']));
             $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
             ?>
           <!--<a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>" class="fulltext" target="new"><i class="fa fa-external-link"></i> <?=($current['url'] == $current['desc']) ? $this->transEsc('Get full text') : $this->escapeHtml($current['desc'])?></a><br/>-->

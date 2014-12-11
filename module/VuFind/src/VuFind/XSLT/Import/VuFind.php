@@ -366,14 +366,25 @@ class VuFind
     {
         static $articles = array('a', 'an', 'the');
 
-        $text = strtolower(trim($in));
+        if (function_exists("mb_substr")):   /* Uj (problems with cyr. XML) */
+            $text = mb_strtolower(trim($in), "UTF-8");
 
-        foreach ($articles as $a) {
-            if (substr($text, 0, strlen($a) + 1) == ($a . ' ')) {
-                $text = substr($text, strlen($a) + 1);
-                break;
+            foreach ($articles as $a) {
+                if (mb_substr($text, 0, mb_strlen($a, "UTF-8") + 1, "UTF-8") == ($a . ' ')) {
+                    $text = mb_substr($text, mb_strlen($a, "UTF-8") + 1, mb_strlen($text, "UTF-8"), "UTF-8");
+                    break;
+                }
             }
-        }
+        else:
+            $text = strtolower(trim($in));
+
+            foreach ($articles as $a) {
+                if (substr($text, 0, strlen($a) + 1) == ($a . ' ')) {
+                    $text = substr($text, strlen($a) + 1);
+                    break;
+                }
+            }
+        endif;
 
         return $text;
     }

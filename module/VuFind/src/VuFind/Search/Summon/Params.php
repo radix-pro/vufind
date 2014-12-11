@@ -218,6 +218,11 @@ class Params extends \VuFind\Search\Base\Params
     {
         // Which filters should be applied to our query?
         $filterList = $this->getFilterList();
+
+        /** Uj (if we want always ignore KPFU catalog) **/
+        $params->add('filters', "SourceType,Library Catalog,true");
+        /** P.S. also work in Combined search (Ajax & standart) **/
+
         if (!empty($filterList)) {
             $orFacets = array();
 
@@ -242,6 +247,15 @@ class Params extends \VuFind\Search\Base\Params
                         // newspapers:
                         $params
                             ->add('filters', "ContentType,Newspaper Article,true");
+
+                    } else if ($filt['field'] == 'excludeLibraryCatalog') {
+                        /** Uj (Var.Ur: Let fix it without checkbox) **
+                        // Special case -- support a checkbox for excluding
+                        // KPFU Library Catalog:
+                        $params
+                            ->add('filters', "SourceType,Library Catalog,true");
+                        **/
+
                     } else if ($range = SolrUtils::parseRange($filt['value'])) {
                         // Special case -- range query (translate [x TO y] syntax):
                         $from = SummonQuery::escapeParam($range['from']);

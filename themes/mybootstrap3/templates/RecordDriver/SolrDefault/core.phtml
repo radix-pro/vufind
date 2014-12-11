@@ -38,6 +38,17 @@
   <div class="col-sm-9">
     <h3 property="name"><?=$this->escapeHtml($this->driver->getShortTitle() . ' ' . $this->driver->getSubtitle() . ' ' . $this->driver->getTitleSection())?></h3>
 
+    <? /* Uj */
+    if ($this->driver->is_Rusmarc()  == true &&
+        $this->driver->getLeader17() == false):
+        /** Use languages/ru.ini **
+        $Record_is_under_performing = "Запись в процессе обработки";
+        echo "<p><font color='#ff0000'>$Record_is_under_performing</font></p>";
+        **/
+        echo "<p><font color='#ff0000'>" . $this->transEsc('Record_is_under_performing') . "</font></p>";
+    endif;
+    ?>
+
     <? $summary = $this->driver->getSummary(); $summary = isset($summary[0]) ? $summary[0] : false; ?>
     <? if ($summary): ?>
       <p><?=$this->truncate($summary, 300)?></p>
@@ -89,29 +100,38 @@
       </tr>
       <? endif; ?>
 
-      <? $authors = $this->driver->getDeduplicatedAuthors(); ?>
-      <? if (isset($authors['main']) && !empty($authors['main'])): ?>
-      <tr>
-        <th><?=$this->transEsc('Main Author')?>: </th>
-        <td property="author"><a href="<?=$this->record($this->driver)->getLink('author', $authors['main'])?>"><?=$this->escapeHtml($authors['main'])?></a></td>
-      </tr>
-      <? endif; ?>
 
-      <? if (isset($authors['corporate']) && !empty($authors['corporate'])): ?>
-      <tr>
-        <th><?=$this->transEsc('Corporate Author')?>: </th>
-        <td property="creator"><a href="<?=$this->record($this->driver)->getLink('author', $authors['corporate'])?>"><?=$this->escapeHtml($authors['corporate'])?></a></td>
-      </tr>
-      <? endif; ?>
+      <? if ($this->driver->is_Rusmarc() == false):
+         /* Uj: Authors for standart VuFind MARC21 record */ ?>
 
-      <? if (isset($authors['secondary']) && !empty($authors['secondary'])): ?>
-      <tr>
-        <th><?=$this->transEsc('Other Authors')?>: </th>
-        <td>
-          <? $i = 0; foreach ($authors['secondary'] as $field): ?><?=($i++ == 0)?'':', '?><span property="contributor"><a href="<?=$this->record($this->driver)->getLink('author', $field)?>"><?=$this->escapeHtml($field)?></a></span><? endforeach; ?>
-        </td>
-      </tr>
-      <? endif; ?>
+          <? $authors = $this->driver->getDeduplicatedAuthors(); ?>
+          <? if (isset($authors['main']) && !empty($authors['main'])): ?>
+          <tr>
+            <th><?=$this->transEsc('Main Author')?>: </th>
+            <td property="author"><a href="<?=$this->record($this->driver)->getLink('author', $authors['main'])?>"><?=$this->escapeHtml($authors['main'])?></a></td>
+          </tr>
+          <? endif; ?>
+
+          <? if (isset($authors['corporate']) && !empty($authors['corporate'])): ?>
+          <tr>
+            <th><?=$this->transEsc('Corporate Author')?>: </th>
+            <td property="creator"><a href="<?=$this->record($this->driver)->getLink('author', $authors['corporate'])?>"><?=$this->escapeHtml($authors['corporate'])?></a></td>
+          </tr>
+          <? endif; ?>
+
+          <? if (isset($authors['secondary']) && !empty($authors['secondary'])): ?>
+          <tr>
+            <th><?=$this->transEsc('Other Authors')?>: </th>
+            <td>
+              <? $i = 0; foreach ($authors['secondary'] as $field): ?><?=($i++ == 0)?'':', '?><span property="contributor"><a href="<?=$this->record($this->driver)->getLink('author', $field)?>"><?=$this->escapeHtml($field)?></a></span><? endforeach; ?>
+            </td>
+          </tr>
+          <? endif; ?>
+
+      <? else:  /* Authors for RUSMARC record */
+          include ("core_rusmarc_auth.phtml");
+      endif; ?>
+
 
       <? $formats = $this->driver->getFormats(); if (!empty($formats)): ?>
         <tr>
@@ -145,6 +165,12 @@
             <? endif; ?>
             <br/>
           <? endforeach; ?>
+
+          <? /* Uj: Tags 106.a & 455.210.d */
+          if ($this->driver->is_Rusmarc() == true):
+              include ("core_rusmarc_ecopy.phtml");
+          endif;
+          ?>
         </td>
       </tr>
       <? endif; ?>
@@ -214,7 +240,8 @@
              $go2url_script = $this->url('home') . "record/go2url";
              $recordID      = urlencode($this->driver->getUniqueID());
              $searchEngine  = urlencode($this->searchClassId); /*Solr,Summon*/
-             $fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));
+           /*$fulltext_url  = urlencode($this->escapeHtml($this->proxyUrl($current['url'])));*/
+             $fulltext_url  = urlencode($this->proxyUrl($current['url']));
              $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
           ?>
         <!--<a href="<?=$this->escapeHtmlAttr($this->proxyUrl($current['url']))?>"><?=$this->escapeHtml($current['desc'])?></a><br/>-->
@@ -246,6 +273,12 @@
           </td>
         </tr>
       <? endif; ?>
+
+      <? /* Uj: Add info from 45X-tags */
+      if ($this->driver->is_Rusmarc() == true):
+          include ("core_rusmarc_45x.phtml");
+      endif;
+      ?>
 
       <?                              /* Uj: WoS API for citings (articles) */
       $show_citing_report = "Y";          /* Show citing report in new win. */

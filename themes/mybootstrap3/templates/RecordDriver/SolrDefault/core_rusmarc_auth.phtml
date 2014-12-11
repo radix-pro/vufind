@@ -1,0 +1,49 @@
+<? 
+/* ************************************************************************ */
+/* Uj (function RusmarcAuthors() defined in SolrMarc.php)                   */
+/* Structure: $main_authors[i][info][href]                                  */
+/* ************************************************************************ */
+
+/** VuFind standart approach
+$main_authors = $this->driver->RusmarcAuthors("700", "ab(g)");
+$corp_authors = $this->driver->RusmarcAuthors("710:711", "ab");
+$misc_authors = $this->driver->RusmarcAuthors("701:702:712", "ab[g]");
+**/
+
+/** V.U. approach
+$main_authors = $this->driver->RusmarcAuthors("700:701:710:711", "ab(g)");
+$misc_authors = $this->driver->RusmarcAuthors("702:712", "ab[g]");
+**/
+
+$main_authors = $this->driver->RusmarcAuthors("700:701", "ab(g)");
+$corp_authors = $this->driver->RusmarcAuthors("710:711", "ab");
+$misc_authors = $this->driver->RusmarcAuthors("702:712", "ab[g]");
+?>
+
+
+<? if (isset($main_authors) && !empty($main_authors)): ?>
+<tr valign="top">
+  <th><?=$this->transEsc('Main Author')?>: </th>
+  <td>
+    <? $i=0; foreach ($main_authors as $author): ?><?=($i++ == 0)?'':', '?><a href="<?=$this->record($this->driver)->getLink('author', $author['href'])?>"><?=$this->escapeHtml($author['info'])?></a><? endforeach; ?>
+  </td>
+</tr>
+<? endif; ?>
+
+<? if (isset($corp_authors) && !empty($corp_authors)): ?>
+<tr valign="top">
+  <th><?=$this->transEsc('Corporate Author')?>: </th>
+  <td>
+    <? $i=0; foreach ($corp_authors as $author): ?><?=($i++ == 0)?'':', '?><a href="<?=$this->record($this->driver)->getLink('author', $author['href'])?>"><?=$this->escapeHtml($author['info'])?></a><? endforeach; ?>
+  </td>
+</tr>
+<? endif; ?>
+
+<? if (isset($misc_authors) && !empty($misc_authors)): ?>
+<tr valign="top">
+  <th><?=$this->transEsc('Other Authors')?>: </th>
+  <td>
+    <? $i=0; foreach ($misc_authors as $author): ?><?=($i++ == 0)?'':', '?><a href="<?=$this->record($this->driver)->getLink('author', $author['href'])?>"><?=$this->escapeHtml($author['info'])?></a><? endforeach; ?>
+  </td>
+</tr>
+<? endif; ?>

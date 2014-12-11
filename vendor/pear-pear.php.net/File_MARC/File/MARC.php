@@ -317,6 +317,11 @@ class File_MARC extends File_MARCBASE
                 $marc->addWarning(File_MARC_Exception::formatError(File_MARC_Exception::$messages[File_MARC_Exception::ERROR_INVALID_DIRECTORY], array("tag" => $tag)));
             }
 
+                                    /* (Uj) Strange unpack (ex: "лекц") !!! */
+            if (intval($len) <= 0 || !is_numeric($len)):
+                return $marc;                 /* Exit from defective record */
+            endif;
+
             $tag_data = substr($text, $data_start + $offset, $len);
 
             if (substr($tag_data, -1, 1) == File_MARC::END_OF_FIELD) {
