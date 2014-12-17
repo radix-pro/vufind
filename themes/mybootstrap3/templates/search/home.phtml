@@ -39,7 +39,10 @@
     <? foreach ($facetList as $field => $details): ?>
       <? $sortedList = $this->sortFacetList($this->results, $field, $details['list'], $basicSearch); ?>
       <div class="<?=$field=='callnumber-first' ? 'col-sm-6' : 'col-sm-3' ?>">
+        <!-- IL & Uj (cut "Browse by")
         <p class="lead"><?=$this->transEsc('home_browse') . ' ' . $this->transEsc($details['label'])?></p>
+        -->
+        <p class="lead"><?=$this->transEsc($details['label'])?></p>
         <div class="row">
           <ul class="list-unstyled <?=$field == "callnumber-first" ? 'col-sm-6' : 'col-sm-12' ?>">
           <? /* Special case: two columns for LC call numbers... */ ?>

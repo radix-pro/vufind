@@ -36,6 +36,10 @@ $commit_files_counter = XML_Indexing("ELIB/F_C", "elib.properties", "ELIB2074023
                                                                      /* WOS */
 $commit_files_counter = XML_Indexing("WOS", "wos.properties", "*WOS*");
 
+                                                                /* NetElLib */
+$commit_files_counter = XML_Indexing("DSPACE_urfu", "dspace_urfu.properties", "*urfu*");
+$commit_files_counter = XML_Indexing("DSPACE_kras", "dspace_kras.properties", "*kras*");
+
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* Fixed part of script                                                     */

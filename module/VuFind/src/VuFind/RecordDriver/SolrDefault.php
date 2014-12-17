@@ -1136,17 +1136,44 @@ class SolrDefault extends AbstractBase
      */
     public function getThumbnail($size = 'small')
     {
-        /** Uj: ELIB & WOS covers **/ 
-        $elib_covers_arr = array("ELIB23054212" => "kev.jpg",
-                                 "ELIB18156126" => "uch_hum.jpg",
-                                 "WOS"          => "wos.jpg");
-        $elib_covers_url  = "http://" . $_SERVER["SERVER_NAME"] . DIRNAME($_SERVER["PHP_SELF"]);
-        $elib_covers_url .= "/themes/mybootstrap3/images/covers";
-        foreach ($elib_covers_arr as $elib_issn => $elib_image):
-           if (isset($this->fields["id"]) && strstr($this->fields["id"], "$elib_issn")):
-               return $elib_covers_url ."/". $elib_image;
-           endif;
-        endforeach;
+        /** IL **/
+        //СЭБ ФУ СФУ
+        if (isset($this->fields['id']) && strpos($this->fields['id'],'ras')>0)
+            return "http://libweb.kpfu.ru/ebooks/icon/CFU.jpg";
+        //СЭБ ФУ УрФУ
+        if (isset($this->fields['id']) && strpos($this->fields['id'],'rfu')>0)
+            return "http://libweb.kpfu.ru/ebooks/icon/UFU.jpg";
+
+        /** Uj: XML covers (ELIB, WOS, ...) **/ 
+        $vf_home_path = GETCWD();
+        $vf_home_url  = "http://" . $_SERVER["SERVER_NAME"] . DIRNAME($_SERVER["PHP_SELF"]);
+        $elib_covers_path = $vf_home_path . "/themes/mybootstrap3/images/xml_covers";
+        $elib_covers_url  = $vf_home_url  . "/themes/mybootstrap3/images/xml_covers";
+
+        if (is_dir($elib_covers_path)):
+        $handle = opendir($elib_covers_path);
+        while ($file = readdir($handle)):                     /* Files loop */
+               if ($file == "." || $file == ".."):
+                   continue;                           /* Ignore (.) & (..) */
+               endif;
+
+               $file_path = $elib_covers_path ."/". $file;
+               if (!is_file($file_path) || !getimagesize($file_path)):
+                   continue;                 /* Ignore subdirs & not images */
+               endif;
+                                           /* Ex: elib23054212.jpg, wos.jpg */
+               $file_name = stristr($file, ".", true);
+               $elib_issn = $file_name;
+               $file_name_len = strlen($file_name);
+
+               if (isset($this->fields["id"]) 
+                   && strtolower(substr($this->fields["id"], 0, $file_name_len)) == strtolower($elib_issn)):
+                   return $elib_covers_url ."/". $file;
+               endif;
+        endwhile;  
+        closedir($handle);  
+        endif;
+
 
         if (isset($this->fields['thumbnail']) && $this->fields['thumbnail']) {
             return $this->fields['thumbnail'];

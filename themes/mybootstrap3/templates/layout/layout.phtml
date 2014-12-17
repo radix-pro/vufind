@@ -67,6 +67,14 @@
     <?=$this->headScript()?>
   </head>
   <body>
+
+    <!--IL/Uj: KFU-style top banner -->
+     <div id="main_KFU">
+    	<?=$this->render('top.phtml')?>
+    </div>
+    <div class="clear"></div>
+    <!-- End of top banner -->
+
     <? // Set up the search box -- there are three possible cases:
       // 1. No search box was set; we should default to the normal box
       // 2. It was set to false; we should display nothing
@@ -139,6 +147,14 @@
         </div>
       </div>
     </div>
+ 
+    <!-- IL/Uj: KFU-style bottom banner -->
+      <div id="main_KFU_new">
+    	<?=$this->render('bottom.phtml')?>
+    </div>
+    <div class="clear"></div>
+    <!-- End of bottom banner -->
+
     <?=$this->googleanalytics()?>
     <?=$this->piwik()?>
   </body>

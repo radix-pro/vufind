@@ -1668,4 +1668,285 @@ class SolrMarc extends SolrDefault
     return $leader_pos;
     }
 
+
+    /** IL **
+     * Covers (images)
+     *
+     */
+    public function getThumbnail($size='small')
+    {
+    	//обложки для авторефератов http://z3950.kpfu.ru/referat/avtoref_cov.jpg
+    	$info105 = $this->marcRecord->getField('105');
+    	if ($info105<>null) {	
+    		$info105a=$info105->getSubfield('a');
+    		if ($info105a<>null && strpos($info105a,'d')==9) 
+    			return "http://z3950.ksu.ru/referat/avtoref_cov.jpg";
+    	}
+
+    $ebooks_icon_url = "http://libweb.kpfu.ru/ebooks/icon/";          /* Uj */
+    $temp1 = $this->marcRecord->getField('856');
+    if ($temp1<>null) {  
+        $temp=$temp1->getSubfield('a');
+            //RUCONT
+        if ($temp<>null && strpos($temp,'ucont')>0) 
+            return $ebooks_icon_url . "RUKONT.jpg";
+        //ZNANIUM
+        $temp=$temp1->getSubfield('u');
+        if ($temp<>null && strpos($temp,'znanium')>0)
+            return $ebooks_icon_url . "znanium3.jpg";
+        //LANM
+        if ($temp<>null && strpos($temp,'e.lanbook')>0)
+            return $ebooks_icon_url . "lan1.jpg";
+        //bibliorossica
+        if ($temp<>null && strpos($temp,'bibliorossica')>0)
+            return $ebooks_icon_url . "biblioros3.jpg";
+    }
+
+    	
+
+    	$info856 = $this->getPdfLink();
+    
+    //обложки для учебно метод материалов http://libweb.kpfu.ru/ebooks/icon/KFU_UM_1.jpg
+    $info001 = current($this->marcRecord->getFields('001'));
+    if ($info001<>null && strpos($info001,'\\LSL\\EOR\\')>0) {
+            $ad=$info856;
+            $pos2=strpos(strtolower($ad),'.pdf');
+            if ($pos2>0){
+                $pos2=strpos($ad,'.pdf');
+                $url=substr($ad,0,$pos2);
+                $url=$url.'_cov.jpg';
+                $status='#^HTTP/1\.[01] (?:2\d\d|3\d\d)#';
+                $status1='#^HTTP/1\.[01] (?:404)#';
+                $result = get_headers($url);
+                if (preg_match($status1,$result[7] ))
+    				{
+                   return $ebooks_icon_url . "KFU_UM_1.jpg";
+    				}
+
+                if (!@fopen($url, "r")):       /* Uj: is cover file exist ? */
+                    return $ebooks_icon_url . "KFU_UM_1.jpg";
+                endif;
+
+                //if (preg_match($status,$result[0] ))
+    				//{
+                   return $url;
+    				//}
+            }
+            return $ebooks_icon_url . "KFU_UM_1.jpg";
+    }
+
+
+    	$info035 = $this->marcRecord->getFields('035');
+    	$info773 = $this->marcRecord->getFields('773');
+    	$info022 = $this->marcRecord->getFields('022');
+    	$info260 = $this->marcRecord->getFields('260');
+    	$info362 = $this->marcRecord->getFields('362');
+    	$tmp=current($this->marcRecord->getFields('001')).current($info035).current($info773);
+    	$info022 = preg_replace('/[^0-9]/i','',$info022);
+    	$urls=$this->getUrls();
+
+    	//Каталог библиотеки
+    	//if (strpos($info001,'Books')>0 && strpos($info001,'RU')>=0 && strpos($info001,'LSL')>0) {
+    	if ((strpos($info001,'RU')>=0 && strpos($info001,'LSL')>0)||(strpos($info001,'LIBNET')>=0)) {
+    			$ad=$info856;
+    			
+    			$pos1=strpos(strtolower($ad),'_con.pdf');
+    			$pos2=strpos(strtolower($ad),'.pdf');
+    			$pos3=strpos(strtolower($ad),'libweb.kpfu.ru');
+    			if ($pos3<=0) $pos3=strpos(strtolower($ad),'libweb.ksu.ru');
+    			$pos4=strpos(strtolower($ad),'er');
+    			$pos5=strpos(strtolower($ad),'el_resources');
+    			if ($pos1>0) {
+    				$url=substr($ad,0,$pos1);
+    				$url=$url.'_cov.jpg';
+    				//echo $url;
+    				return $url;
+    			} else if ($pos2>0){
+    				$pos2=strpos($ad,'.pdf');
+    				$url=substr($ad,0,$pos2);
+    				$url=$url.'_cov.jpg';
+    				//echo $url;
+    				return $url;
+    			} else if ($pos3>0 && $pos4>0) {
+    				$ad=$ad.'/_cv/full/!100,100/0/native.jpg';
+    				//echo $ad;
+    				//echo $ad;
+    				return $ad;
+    			} else if ($pos3>0 && $pos5>0) {
+    				$ad=str_replace('el_resources','er',$ad);
+    				$ad=$ad.'/_cv/full/!100,100/0/native.jpg';
+    				//echo $ad;
+    				return $ad;
+    			} else if ($isbn = $this->getCleanISBN()) {
+    					return array('isn' => $isbn, 'size' => $size);
+    			} 
+    			//echo "false\n";
+    			return false;
+    	}
+    	//Электронные журналы и книги
+    	else if (strpos($tmp,'ebr')>0) {
+    		if (count($urls)>0) {
+    			$ad=$urls[0]["url"];
+            $rest = substr($ad, 42);
+            $url='http://site.ebrary.com/lib/kazanst/cover.action?docID='.$rest;
+    			return $url;
+    		}else if ($isbn = $this->getCleanISBN()) {
+    					return array('isn' => $isbn, 'size' => $size);
+    				}
+    				return false;
+    	} else if (strpos($tmp,'ejournal')>0){
+    			if(count($urls)>0&&strpos($urls[0]["url"],'sciencedirect')>0){
+    				if (count($urls)>0) {
+    				$rest = substr($urls[0]["url"], 45);
+    				$url='http://ars.els-cdn.com/content/image/S'.$rest .'.gif';
+    				return $url;
+    			}else if ($isbn = $this->getCleanISBN()) {
+    					return array('isn' => $isbn, 'size' => $size);
+    					}
+    				return false;
+    			}else if(count($urls)>0 && strpos($urls[0]["url"],'jstor')>0){
+                                    if (count($urls)>0) {
+                                    $rest = substr($urls[0]["url"], 56);
+                                    $url='http://www.jstor.org/literatum/publisher/jstor/journals/covergifs/'.$rest .'/cover.gif';
+                                    return $url;
+                                    }else if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'cambridge')>0){
+                                    if (count($urls)>0) {
+    										$rest = substr($urls[0]["url"], 57);
+    										$rest = mb_convert_case($rest, MB_CASE_UPPER, "UTF-8");
+    										$url='http://journals.cambridge.org/cover_images/'.$rest.'/'.$rest .'.jpg';
+    										return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'iopscience')>0){
+                                    if (count($urls)>0) {
+    										$rest = substr($urls[0]["url"], 26);
+    										//if(fopen('http://images.iop.org/journals_icons/Info/'.$rest .'/cover.jpg',"r"))
+    										$url='http://images.iop.org/journals_icons/Info/'.$rest .'/cover.jpg';
+    										$testheader=get_headers($url);
+    										if ($testheader[0]<>"HTTP/1.1 200 OK")
+    										{ 
+    											$url='http://images.iop.org/journals_icons/Info/'.$rest .'/cover.gif';
+    											$testheader=get_headers($url);
+    											if ($testheader[0]=="HTTP/1.1 200 OK")
+    												return $url;
+    										}
+    										else return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    									}
+    									return false;
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'pubs.acs.org')>0){
+                                    if (count($urls)>0) {
+    										$rest = substr($urls[0]["url"], 24);
+    										$random_volume =2014 - substr(preg_replace('/[^0-9]/i','',$info362[0]),8);
+    										$url="http://pubs.acs.org/appl/literatum/publisher/achs/journals/content/".$rest."/2013/". $rest.".2013.".$random_volume.".issue-1/".$rest.".2013.".$random_volume.".issue-1/production/".$rest.".2013.".$random_volume.".issue-1.largecover.jpg";
+    										return $url;
+    									}else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'link.aip.org')>0){
+                                    if (count($urls)>0) {
+    										$rest = substr($urls[0]["url"], 26);
+    										$random_volume =2014 - substr(preg_replace('/[^0-9]/i','',$info362[0]),-6,4);
+    										$url="http://online.medphys.org/free_media/issue_files/".$rest."/tn".$random_volume."-1.jpg";
+    										return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'elibrary.ru')>0){
+                                    if (count($urls)>0) {
+                                    $url="http://elibrary.ru/images/menu_journ.jpg";
+                                    if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else if(count($urls)>0 && strpos($urls[0]["url"],'www.sciencemag.org')>0){
+                                    if (count($urls)>0) {
+                                    $url="http://www.sciencemag.org/site/icons_shared/sci-assets.png";
+                                    return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else if(count($urls)>0 && strpos($info856[0],'oxfordjournals')>0){
+                                    if (count($urls)>0) {
+                                    $url=$info856[0].'/widget/public/current-issue/cover.gif';
+                                    return $url;
+                                    }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+                            }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+
+
+            }else  if ($isbn = $this->getCleanISBN()) {
+    										return array('isn' => $isbn, 'size' => $size);
+    										}
+    									return false;
+
+    }	
+
+    /** IL **/
+    //возвращает значение поля 856u
+    public function getPdfLink()
+    {
+        $retVal = array();
+
+        // Which fields/subfields should we check for URLs?
+        $fieldsToCheck = array(
+            //'856' => array('y', 'z'),   // Standard URL
+            //'555' => array('a'),         // Cumulative index/finding aids
+			'856'=>array('u')
+        );
+
+        foreach ($fieldsToCheck as $field => $subfields) {
+            $urls = $this->marcRecord->getFields($field);
+            if ($urls) {
+                foreach ($urls as $url) {
+                    // Is there an address in the current field?
+                    $address = $url->getSubfield('u');
+                    if ($address) {
+                        $address = $address->getData();
+
+                        // Is there a description?  If not, just use the URL itself.
+                        foreach ($subfields as $current) {
+                            $desc = $url->getSubfield($current);
+                            if ($desc) {
+                                break;
+                            }
+                        }
+                        if ($desc) {
+                            $desc = $desc->getData();
+                        } else {
+                            $desc = $address;
+                        }
+
+                        $retVal[] = array('url' => $address, 'desc' => $desc);
+                    }
+                }
+            }
+        }
+		
+		if (count($retVal)>0) {
+			 return $retVal[0]["url"];}
+		else return null;
+    }	
+
+
 }

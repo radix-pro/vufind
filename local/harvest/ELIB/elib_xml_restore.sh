@@ -21,8 +21,11 @@ cp $VUFIND_LOCAL_DIR/harvest/ELIB/F_C/processed/* $VUFIND_LOCAL_DIR/harvest/ELIB
 # WOS
 cp $VUFIND_LOCAL_DIR/harvest/WOS/processed/* $VUFIND_LOCAL_DIR/harvest/WOS/
 
-### Step-2: call indexing script to perform restored files ###
-### P.S. If ignore below script => indexing from cron at night !!!
+# NetElLib
+cp $VUFIND_LOCAL_DIR/harvest/DSPACE_urfu/processed/* $VUFIND_LOCAL_DIR/harvest/DSPACE_urfu/
+cp $VUFIND_LOCAL_DIR/harvest/DSPACE_kras/processed/* $VUFIND_LOCAL_DIR/harvest/DSPACE_kras/
 
-#sh $VUFIND_LOCAL_DIR/harvest/ELIB/elib_xml_indexing.sh
-    $VUFIND_LOCAL_DIR/harvest/ELIB/elib_xml_indexing.sh
+### Step-2: call indexing script to perform restored files ###
+### P.S. If ignore (comment) below script => indexing from cron at night !!!
+
+# $VUFIND_LOCAL_DIR/harvest/ELIB/elib_xml_indexing.sh

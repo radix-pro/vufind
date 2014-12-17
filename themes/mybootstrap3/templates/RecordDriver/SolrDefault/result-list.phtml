@@ -5,7 +5,10 @@
       <input type="hidden" value="<?=$this->escapeHtmlAttr($this->driver->getResourceSource())?>" class="hiddenSource" />
       <a href="<?=$this->recordLink()->getUrl($this->driver)?>">
         <? if ($summThumb = $this->record($this->driver)->getThumbnail()): ?>
+          <!-- IL
           <img class="recordcover" src="<?=$this->escapeHtmlAttr($summThumb)?>" alt="<?=$this->transEsc('Cover Image')?>"/>
+          -->
+          <img class="recordcover" src="<?=$this->escapeHtmlAttr($summThumb)?>" alt="<?=$this->transEsc('Cover Image')?>" onerror="src='<?=$this->url('cover-unavailable')?>'"/>
         <? else: ?>
           <img class="recordcover" src="<?=$this->url('cover-unavailable')?>" alt="<?=$this->transEsc('No Cover Image')?>"/>
         <? endif; ?>
