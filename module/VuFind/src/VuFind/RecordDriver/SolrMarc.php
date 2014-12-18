@@ -1948,5 +1948,21 @@ class SolrMarc extends SolrDefault
 		else return null;
     }	
 
+    /** IL **/
+    // Alexandrova возвращает комментарии из поля 856y 856z 856x
+    public function getURLcomments()
+    {
+		$retVal="";
+        $urls = $this->marcRecord->getFields('856');
+        if ($urls) {
+            foreach ($urls as $url) {
+                $commenty = $url->getSubfield('y');
+				$commentz = $url->getSubfield('z');
+                $commentx = $url->getSubfield('x');
+				$retVal=$retVal.$commenty.$commentx.$commentz;
+            }
+        }
+		return $retVal;
+    }
 
 }

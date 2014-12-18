@@ -1,0 +1,60 @@
+<?
+    // Set page title.
+    $this->headTitle($this->translate('Reader') . ': ' . $this->driver->getBreadcrumb());
+?>
+
+
+<? $erLink = $this->driver->getPdfLink(); ?>
+	<? if (count($erLink)>0 && (strpos($erLink,'el_resources')>0 || (strpos($erLink,'er')>0&&(!strpos(strtolower($erLink),'pdf')>0)))): 
+		$erLink=str_replace('el_resources','er',$erLink);?>
+		<!--	<form action="<?=$erLink?>" method="post" target="_blank">
+			<input type="submit"  value="<?=$this->transEsc("FullScreen")?>"/>
+			</form>-->
+			
+			<div>
+			<div id="toolbarDiv" class="toolbar"></div> 
+			</div>
+			<div class="demoarea" >
+			<div id="example1-openseadragon" class="openseadragon"></div>
+			</div>  
+			
+			<script type="text/javascript">
+			$.ajax({
+				url: '<?=$erLink."/sources.json"?>',             // указываем URL и
+				crossDomain: true,
+				dataType : "json",                     // тип загружаемых данных
+				success: function (data, textStatus) { // вешаем свой обработчик на функцию success
+				OpenSeadragon({
+					id:                 "example1-openseadragon",
+					prefixUrl:          "/openseadragon/images/",
+					showReferenceStrip:  false,
+					showNavigator:  true,
+					//fullPageButton: "full-page",
+					toolbar:       "toolbarDiv",
+					//navigatorId:   "navigatorDiv",
+					showReferenceStrip:     true,
+					referenceStripScroll:   'vertical',
+					tileSources:  data
+					});
+				},
+				error: function(data, textStatus){alert(textStatus);}
+			});
+			</script>
+
+			
+
+
+	<? else: ?>
+	<? 
+		$pdfLink=$erLink; 
+	?>
+	
+	  <? if ((strpos($pdfLink, "pdf")==(strlen($pdfLink)-3)) or (strpos($pdfLink, "PDF")==(strlen($pdfLink)-3))):?>
+	    <form action="<?=$pdfLink?>" method="post" target="_blank">
+	    <input type="submit"  value="<?=$this->transEsc("FullScreen")?>"/>
+	    </form>
+	  
+	    <object data="<?=$pdfLink?>"  type="application/pdf" width="690px" height="700px">
+	    </object>
+	  <? endif; ?>
+	<? endif; ?>

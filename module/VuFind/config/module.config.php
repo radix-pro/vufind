@@ -466,6 +466,11 @@ $config = array(
                     'staffviewmarc' => 'VuFind\RecordTab\StaffViewMARC',
                     'toc' => 'VuFind\RecordTab\TOC',
                 ),
+      		// IL: начало вставки (после reviews=> и до invokables=>)
+      			'reader'=>function ($sm){
+      				return new \VuFind\RecordTab\Reader();
+      			},
+      		// IL: конец вставки
             ),
             'related' => array(
                 'abstract_factories' => array('VuFind\Related\PluginFactory'),
@@ -613,6 +618,9 @@ $config = array(
                     'Preview' => 'preview',
                     'HierarchyTree' => 'HierarchyTree', 'Map' => 'Map',
                     'Details' => 'StaffViewArray',
+       	             // IL: начало вставки
+        	    'Reader'=>'Reader',
+        	     // IL: конец вставки
                 ),
                 'defaultTab' => null,
             ),
@@ -624,6 +632,9 @@ $config = array(
                     'Preview' => 'preview',
                     'HierarchyTree' => 'HierarchyTree', 'Map' => 'Map',
                     'Details' => 'StaffViewMARC',
+         	     // IL: начало вставки
+      		    'Reader'=>'Reader',
+         	     // IL: конец вставки                
                 ),
                 'defaultTab' => null,
             ),

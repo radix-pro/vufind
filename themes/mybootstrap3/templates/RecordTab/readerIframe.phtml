@@ -1,0 +1,47 @@
+<?
+    // Set page title.
+    $this->headTitle($this->translate('Reader') . ': ' . $this->driver->getBreadcrumb());
+?>
+
+<? $erLink = $this->driver->getPdfLink(); ?>
+	<? if (count($erLink)>0 && (strpos($erLink,'el_resources')>0 || (strpos($erLink,'er')>0&&(!strpos(strtolower($erLink),'pdf')>0)))): 
+		$erLink=str_replace('el_resources','er',$erLink);
+		?>
+
+                <?      /* Uj (use redirect script for fulltext statistics) */
+                $go2url_script = $this->url('home') . "record/go2url";
+                $recordID      = urlencode($this->driver->getUniqueID());
+                $searchEngine  = urlencode($this->searchClassId); /* Solr...*/
+                $fulltext_url  = urlencode($erLink);
+                $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
+                $erLink = $fulltext_url;                             /* !!! */
+                ?>
+
+		<form action="<?=$erLink?>" method="post" target="_blank">
+			<input type="submit"  value="<?=$this->transEsc("FullScreen")?>"/>
+	    </form>
+		<iframe width="690px" height="650px" src=<?=$erLink?>/>
+	<? else: ?>
+	<? 
+		$pdfLink=$erLink; 
+	?>
+	
+	  <? if ((strpos($pdfLink, "pdf")==(strlen($pdfLink)-3)) or (strpos($pdfLink, "PDF")==(strlen($pdfLink)-3))):?>
+
+            <?          /* Uj (use redirect script for fulltext statistics) */
+            $go2url_script = $this->url('home') . "record/go2url";
+            $recordID      = urlencode($this->driver->getUniqueID());
+            $searchEngine  = urlencode($this->searchClassId);/* Solr,Summon */
+            $fulltext_url  = urlencode($pdfLink);
+            $fulltext_url  = "{$go2url_script}?url={$fulltext_url}&record={$recordID}&engine={$searchEngine}";
+            $pdfLink = $fulltext_url;                                /* !!! */
+            ?>
+
+	    <form action="<?=$pdfLink?>" method="post" target="_blank">
+	    <input type="submit"  value="<?=$this->transEsc("FullScreen")?>"/>
+	    </form>
+	  
+	    <object data="<?=$pdfLink?>"  type="application/pdf" width="690px" height="700px">
+	    </object>
+	  <? endif; ?>
+	<? endif; ?>

@@ -1939,4 +1939,17 @@ class SolrDefault extends AbstractBase
         return isset($this->fields["$field_name"])
             ? $this->fields["$field_name"] : '';
     }
+
+    /** IL **/
+    //для корректного отображения xml добавлены два пустых метода
+    public function getPdfLink ()
+    { 
+    }
+    public function getErLink ()
+    { 
+    }	
+    public function getURLcomments()
+    {
+    }
+
 }

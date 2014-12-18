@@ -60,6 +60,23 @@
             $this->layout()->breadcrumbs .= '<li class="active">' . $this->transEsc($desc) . '</li>';
             $activeTabObj = $obj;
           }
+
+	  // IL: начало вставки 1
+	  $erLink =null;
+	  $descLink=$this->driver->getURLs();
+	  $flagLink=0;
+	  if (count($descLink)>0  && count($descLink[0])>1){
+		$erLink = $descLink[0]["url"];
+		//$descLink=strtolower($descLink[0]["desc"]);
+		$descLink=strtolower($this->driver->getURLcomments());
+
+		$flagLink=substr_count($descLink,"фрагмент книги");
+		if ($flagLink==0) $flagLink=substr_count($descLink,"local");
+	  }
+	  
+	  if (!($desc=='Reader' && (count($erLink)==0 || $flagLink<=0) )): 
+	  // IL: конец вставки 1
+
           $tab_classes = array();
           if ($isCurrent) $tab_classes[] = 'active';
           if (!$obj->isVisible()) $tab_classes[] = 'hidden';
@@ -67,6 +84,13 @@
         <li<?=count($tab_classes) > 0 ? ' class="' . implode(' ', $tab_classes) . '"' : ''?>>
           <a id="<?=strtolower($tab) ?>" href="<?=$this->recordLink()->getTabUrl($this->driver, $tab)?>#tabnav"><?=$this->transEsc($desc)?></a>
         </li>
+
+        <? 
+        // IL: начало вставки 2
+         endif;
+        // IL: конец вставки 2
+        ?>     
+
         <? endforeach; ?>
       </ul>
     <? endif; ?>
