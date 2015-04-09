@@ -231,7 +231,7 @@ class EuropeanaResults implements RecommendInterface,
             if (!empty($link)) {
                 $resultsProcessed[] = [
                     'title' => $value->getTitle(),
-                    'link' => substr($link, 0, strpos($link, '.srw')) . '.html',
+                    'link' => $link,
                     'enclosure' => $value->getEnclosure()['url']
                 ];
             }
