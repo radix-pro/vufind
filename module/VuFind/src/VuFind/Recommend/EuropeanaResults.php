@@ -233,7 +233,7 @@ class EuropeanaResults implements RecommendInterface,
                 $resultsProcessed[] = [
                     'title' => $value->getTitle(),
                     'link' => $link,
-                    'enclosure' => empty($enclosure['url'])? '' : $enclosure['url']
+                    'enclosure' => @$enclosure['url']
                 ];
             }
             if (count($resultsProcessed) == $this->limit) {
