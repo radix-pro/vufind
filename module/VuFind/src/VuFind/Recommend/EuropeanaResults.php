@@ -229,10 +229,11 @@ class EuropeanaResults implements RecommendInterface,
         foreach ($parsedFeed as $value) {
             $link = $value->getLink();
             if (!empty($link)) {
+                $enclosure = $value->getEnclosure();
                 $resultsProcessed[] = [
                     'title' => $value->getTitle(),
                     'link' => $link,
-                    'enclosure' => $value->getEnclosure()['url']
+                    'enclosure' => empty($enclosure['url'])? '' : $enclosure['url']
                 ];
             }
             if (count($resultsProcessed) == $this->limit) {
